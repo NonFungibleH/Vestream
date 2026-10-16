@@ -16,6 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { DocIconName } from "@/app/docs/_components/DocsIcon";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 export type DocBlock =
   | { type: "lead"; text: string }
@@ -56,7 +57,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: "getting-started",
     title: "Getting started with Vestream",
     description:
-      "What Vestream does, how to download the app, and how to start tracking token vesting unlocks across 12+ protocols and 9+ chains in a few minutes.",
+      `What Vestream does, how to download the app, and how to start tracking token vesting unlocks across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains in a few minutes.`,
     category: "Getting started",
     icon: "rocket",
     summary: "What Vestream is and how to get up and running.",

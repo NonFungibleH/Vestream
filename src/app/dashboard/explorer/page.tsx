@@ -37,7 +37,7 @@ import {
   type StreamSortKey,
 } from "@/lib/vesting/explorer-queries";
 import { resolveEnsName } from "@/lib/ens";
-import { listProtocols, getProtocol } from "@/lib/protocol-constants";
+import { listProtocols, getProtocol, PUBLIC_PROTOCOL_COUNT } from "@/lib/protocol-constants";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
 import { ExplorerSearchInput } from "./SearchInput";
 import { SavedTokensStrip } from "./SavedTokensStrip";
@@ -882,7 +882,7 @@ function WalletResults({
           Paste a wallet address or ENS name above
         </p>
         <p className="text-xs" style={{ color: "var(--preview-text-3)" }}>
-          Wallet mode shows every indexed vesting position for one recipient – across all 12+ protocols.
+          Wallet mode shows every indexed vesting position for one recipient – across all {PUBLIC_PROTOCOL_COUNT} protocols.
         </p>
       </div>
     );
@@ -908,7 +908,7 @@ function WalletResults({
           No indexed vesting positions for this address yet.
         </p>
         <p className="text-xs mt-1" style={{ color: "var(--preview-text-3)" }}>
-          Track this wallet in your <Link href="/dashboard" className="underline">dashboard</Link> to live-scan all 12+ protocols.
+          Track this wallet in your <Link href="/dashboard" className="underline">dashboard</Link> to live-scan all {PUBLIC_PROTOCOL_COUNT} protocols.
         </p>
       </div>
     );

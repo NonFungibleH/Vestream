@@ -16,7 +16,7 @@ import { after } from "next/server";
 import { getLastGoodUnlocksData, setLastGoodUnlocksData } from "@/lib/vesting/page-data-fallback";
 import { UnlockCountdown } from "@/components/UnlockCountdown";
 import { InkHero } from "@/components/InkHero";
-import { getProtocol, chainBrand } from "@/lib/protocol-constants";
+import { getProtocol, chainBrand, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 import { withTimeout } from "@/lib/with-timeout";
 import { getNewLocks, enrichNewLocksWithUsd, type NewLockRow } from "@/lib/vesting/new-locks";
@@ -45,11 +45,11 @@ export const maxDuration = 60;
 
 export const metadata: Metadata = {
   title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
-  description: "Live calendar of upcoming token unlocks across 11+ vesting protocols and 9+ chains. View by today, this week, this month, or rolling 30/60/90-day windows.",
+  description: `Live calendar of upcoming token unlocks across ${PUBLIC_PROTOCOL_COUNT} vesting protocols and ${PUBLIC_CHAIN_COUNT} chains. View by today, this week, this month, or rolling 30/60/90-day windows.`,
   alternates:  { canonical: "https://www.vestream.io/unlocks" },
   openGraph: {
     title:       "Token Unlock Calendar | Vestream",
-    description: "Live calendar of upcoming token unlocks across 11+ vesting protocols and 9+ chains.",
+    description: `Live calendar of upcoming token unlocks across ${PUBLIC_PROTOCOL_COUNT} vesting protocols and ${PUBLIC_CHAIN_COUNT} chains.`,
     url:         "https://www.vestream.io/unlocks",
     siteName:    "Vestream",
     type:        "website",

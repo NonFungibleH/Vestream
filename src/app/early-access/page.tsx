@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 // /early-access — "Get the app" landing.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
-  description: "Download Vestream free on iOS and Android. Track every token unlock across 11+ vesting protocols and 9+ chains, no account, no KYC. Pro adds unlimited alerts.",
+  description: `Download Vestream free on iOS and Android. Track every token unlock across ${PUBLIC_PROTOCOL_COUNT} vesting protocols and ${PUBLIC_CHAIN_COUNT} chains, no account, no KYC. Pro adds unlimited alerts.`,
   alternates:  { canonical: "https://www.vestream.io/early-access" },
   openGraph: {
     title:       "Get Vestream – Free Token-Unlock Tracker for iOS & Android",
@@ -60,7 +61,7 @@ export default function GetTheAppPage() {
             Track every token unlock.
           </h1>
           <p className="text-base md:text-lg mb-8 leading-relaxed" style={{ color: "#8B8E92" }}>
-            Vestream watches your vesting across 12+ protocols and 9+ chains, and
+            Vestream watches your vesting across {PUBLIC_PROTOCOL_COUNT} protocols and {PUBLIC_CHAIN_COUNT} chains, and
             tells you before every cliff and unlock. Get the free app to start.
           </p>
 

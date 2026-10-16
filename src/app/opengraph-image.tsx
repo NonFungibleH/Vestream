@@ -14,6 +14,7 @@
 
 import { ImageResponse } from "next/og";
 import { VestreamMark } from "@/lib/og/vestream-mark";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 export const runtime  = "edge";
 export const alt      = "Vestream – Free Token Vesting Tracker for 12 Protocols";
@@ -107,7 +108,7 @@ export default async function OG() {
             }}
           >
             <span style={{ width: 10, height: 10, background: "#0F8A8A", borderRadius: "50%" }} />
-            12+ protocols · 9+ chains · Live indexing
+            {PUBLIC_PROTOCOL_COUNT} protocols · {PUBLIC_CHAIN_COUNT} chains · Live indexing
           </div>
           <span style={{ fontSize: 22, color: "#8B8E92" }}>vestream.io</span>
         </div>

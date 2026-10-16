@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import PricingCta from "@/components/PricingCta";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 export const metadata: Metadata = {
   title:       "Pricing – Vestream Pro from $9.99/mo, Free Forever Tier",
@@ -84,7 +85,7 @@ const pricingJsonLd = {
   "@context":   "https://schema.org",
   "@type":      "Product",
   name:         "Vestream",
-  description:  "Token vesting tracker for crypto investors – track every token unlock across 12+ protocols and 9+ chains.",
+  description:  `Token vesting tracker for crypto investors – track every token unlock across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains.`,
   brand:        { "@type": "Brand", name: "Vestream" },
   url:          "https://www.vestream.io/pricing",
   image:        "https://www.vestream.io/logo.svg",

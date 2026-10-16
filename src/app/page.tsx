@@ -6,7 +6,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { GradientCta } from "@/components/GradientCta";
 import { PricingComparisonTable } from "@/components/PricingComparisonTable";
 import { PhoneClock } from "@/components/PhoneClock";
-import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon } from "@/lib/protocol-constants";
+import { CHAIN_NAMES } from "@vestream/shared";
+import { listProtocols, publicChainIds, PUBLIC_CHAIN_COUNT, protocolIcon, PUBLIC_PROTOCOL_COUNT } from "@/lib/protocol-constants";
 import { loadSnapshots } from "@/lib/vesting/chain-stats";
 import { getLastGoodHomeData, setLastGoodHomeData } from "@/lib/vesting/page-data-fallback";
 import { formatUsdCompact } from "@/lib/vesting/quick-prices";
@@ -176,7 +177,7 @@ const homepageJsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Track token vestings across 12+ protocols",
+        `Track token vestings across ${PUBLIC_PROTOCOL_COUNT} protocols`,
         "Real-time unlock alerts via push and email",
         "Multi-chain coverage: Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana",
         "P&L tracking and CSV export",
@@ -1367,7 +1368,7 @@ export default async function Home() {
 
             <ul className="flex flex-col gap-3.5">
               {[
-                "12+ protocols scanned simultaneously - every one listed above",
+                `${PUBLIC_PROTOCOL_COUNT} protocols scanned simultaneously - every one listed above`,
                 "Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche & Solana",
                 "Results surface in under 3 seconds",
               ].map(item => (
@@ -1415,7 +1416,7 @@ export default async function Home() {
                 </div>
               </div>
             ))}
-            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all 12+ protocols &amp; 9+ chains</p>
+            <p className="text-center mt-3" style={{ color: "#B8BABD", fontSize: 11 }}>Every active vesting, across all {PUBLIC_PROTOCOL_COUNT} protocols &amp; {PUBLIC_CHAIN_COUNT} chains</p>
           </div>
         </div>
         </div>
@@ -1953,7 +1954,7 @@ export default async function Home() {
             },
             {
               q: "Which protocols and chains are supported?",
-              a: "Vestream supports 12+ protocols: Sablier (linear & tranched streaming), Sablier Flow, Hedgey (vesting plans), Superfluid (streaming vesting), LlamaPay (per-second token streaming), UNCX Network (locker & VestingManager), Unvest, Team Finance (team vesting & lock proof), PinkSale (PinkLock), Streamflow (Solana), Jupiter Lock (time-released token vesting on Solana), and HoodLock (Robinhood Chain token locker) – on Ethereum, Base, BSC, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana. Ethereum Sepolia is supported for testing. More protocols and chains on the roadmap.",
+              a: `Vestream supports ${PUBLIC_PROTOCOL_COUNT} protocols: ${listProtocols().map((p) => p.name).join(", ")}, on ${PUBLIC_CHAIN_COUNT} chains: ${publicChainIds().map((c) => CHAIN_NAMES[c as keyof typeof CHAIN_NAMES] ?? String(c)).join(", ")}. More protocols and chains are on the roadmap.`,
             },
             {
               q: "How do unlock notifications work?",
@@ -1977,7 +1978,7 @@ export default async function Home() {
             },
             {
               q: "Is Vestream free to use?",
-              a: "Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all 11+ supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year – saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).",
+              a: `Yes. Free plan includes 3 wallets on the mobile app, the public web wallet scanner, all ${PUBLIC_PROTOCOL_COUNT} supported protocols, claimable balance tracking, the unlock calendar, and 10 push alerts per month (resets on the 1st). Pro ($9.99/mo or $74.99/year – saves 37%) adds 10 wallets, unlimited push + email alerts, the desktop dashboard, the Token Vesting Explorer, and tax exports (Koinly / CoinTracker / TurboTax + year-end PDF + income statement).`,
             },
             {
               q: "Do you have an API for developers and AI agents?",
@@ -2025,7 +2026,7 @@ export default async function Home() {
               {[
                 "3 wallets on the mobile app",
                 "Free web wallet scanner – any address",
-                "All 11+ vesting protocols",
+                `All ${PUBLIC_PROTOCOL_COUNT} vesting protocols`,
                 "Claimable balance + unlock calendar",
                 "10 push alerts / month (resets monthly)",
                 "No email alerts (upgrade for email)",
@@ -2124,7 +2125,7 @@ export default async function Home() {
       <GradientCta
         eyebrow="Takes about a minute"
         title="See every token you&rsquo;re owed."
-        sub="Paste any wallet and Vestream returns every active vesting across 12 protocols in seconds. No sign-up, no wallet connection, read-only."
+        sub={`Paste any wallet and Vestream returns every active vesting across ${PUBLIC_PROTOCOL_COUNT} protocols in seconds. No sign-up, no wallet connection, read-only.`}
         primary={{ href: "/find-vestings", label: "Find my vestings →" }}
         secondary={{ href: "#download", label: "Get the app" }}
       />

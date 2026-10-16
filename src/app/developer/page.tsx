@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ApiAccessForm } from "@/components/ApiAccessForm";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 // OpenGraph metadata – was missing from this page entirely (the /ai page
 // has it, /developer slipped through). Adds LinkedIn/Twitter/Slack unfurl
@@ -10,12 +11,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata: Metadata = {
   title: "Developer API | Vestream",
   description:
-    "Token vesting API for developers: REST + MCP server covering 12+ protocols and 9+ chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.",
+    `Token vesting API for developers: REST + MCP server covering ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains, EVM and Solana, in one normalised JSON schema. Ready in minutes.`,
   alternates: { canonical: "https://www.vestream.io/developer" },
   openGraph: {
     title: "Developer API | Vestream",
     description:
-      "REST + MCP for 11+ vesting protocols across 9+ chains – EVM and Solana. Normalised JSON, agent-native.",
+      `REST + MCP for ${PUBLIC_PROTOCOL_COUNT} vesting protocols across ${PUBLIC_CHAIN_COUNT} chains – EVM and Solana. Normalised JSON, agent-native.`,
     url: "https://www.vestream.io/developer",
     siteName: "Vestream",
     type: "website",
@@ -502,7 +503,7 @@ export default function DeveloperPage() {
                 {[
                   "30 req/min burst · 150/day",
                   "All 3 endpoints",
-                  "12+ protocols indexed (EVM + Solana)",
+                  `${PUBLIC_PROTOCOL_COUNT} protocols indexed (EVM + Solana)`,
                   "Standard JSON responses",
                   { html: <>Email support – <a href="mailto:team@vestream.io?subject=API%20question" style={{ color: "#1CB8B8" }} className="underline">team@vestream.io</a></> },
                 ].map((f, i) => (
@@ -544,7 +545,7 @@ export default function DeveloperPage() {
                 {[
                   "Higher rate limits (scoped to your use case)",
                   "All 3 endpoints + early access to new ones",
-                  "12+ protocols · 9+ chains (EVM + Solana)",
+                  `${PUBLIC_PROTOCOL_COUNT} protocols · ${PUBLIC_CHAIN_COUNT} chains (EVM + Solana)`,
                   "Priority response SLA",
                   "Dedicated Slack / Telegram channel",
                   "Team workspace + SSO (on request)",

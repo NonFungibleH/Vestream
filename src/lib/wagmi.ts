@@ -113,7 +113,7 @@ import {
 // If the apex domain ever becomes the canonical, update both values.
 export const wagmiConfig = getDefaultConfig({
   appName: "Vestream",
-  appDescription: "Track every token unlock across 11+ vesting protocols",
+  appDescription: "Track every token unlock you are owed",
   appUrl: "https://www.vestream.io",
   appIcon: "https://www.vestream.io/icons/icon-192.png",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "vestr-dev",

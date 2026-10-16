@@ -16,7 +16,7 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { listProtocols } from "@/lib/protocol-constants";
+import { listProtocols, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import { getAllArticles } from "@/lib/articles";
 
 export const metadata = {
@@ -86,7 +86,7 @@ export default function NotFound() {
                 Find your vestings
               </h2>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.78)" }}>
-                Paste any wallet – we scan 12+ protocols across 9+ chains in seconds.
+                Paste any wallet – we scan {PUBLIC_PROTOCOL_COUNT} protocols across {PUBLIC_CHAIN_COUNT} chains in seconds.
               </p>
               <span className="inline-flex items-center gap-1 mt-4 text-xs font-semibold" style={{ color: "white" }}>
                 Scan a wallet →

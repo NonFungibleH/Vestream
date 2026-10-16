@@ -16,7 +16,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useAccount, useDisconnect } from "wagmi";
-import { protocolBrand, listProtocols, publicChainIds, chainBrand, getProtocol } from "@/lib/protocol-constants";
+import { protocolBrand, listProtocols, publicChainIds, chainBrand, getProtocol, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
 import { track, classifyAddressOrQuery } from "@/lib/analytics";
@@ -251,7 +251,7 @@ export default function FindVestingsClient() {
             Connect to find your vesting
           </h2>
           <p className="text-sm max-w-md mx-auto mb-6" style={{ color: "#8B8E92" }}>
-            We&rsquo;ll scan your wallet across 12+ protocols and 9+ chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
+            We&rsquo;ll scan your wallet across {PUBLIC_PROTOCOL_COUNT} protocols and {PUBLIC_CHAIN_COUNT} chains – EVM and Solana. These same vestings will appear live in the Vestream mobile app with push alerts.
           </p>
 
           {/* Single brand-styled trigger; RainbowKit's modal handles the

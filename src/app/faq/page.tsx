@@ -24,6 +24,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT, listProtocols, publicChainIds } from "@/lib/protocol-constants";
+import { CHAIN_NAMES } from "@vestream/shared";
 
 export const metadata: Metadata = {
   title: "FAQ: token vesting, unlock alerts, developer API | Vestream",
@@ -68,7 +70,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "What is Vestream?",
-        a: "Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It indexes every public vesting schedule from twelve major platforms – Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock – across Ethereum, Base, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Robinhood Chain, and Solana, and gives you one dashboard to see every unlock coming to any wallet, plus email and push alerts before each one.",
+        a: `Vestream is a cross-protocol, cross-chain tracker for on-chain token vesting. It reads public vesting schedules from ${PUBLIC_PROTOCOL_COUNT} protocols (${listProtocols().map((p) => p.name).join(", ")}) across ${PUBLIC_CHAIN_COUNT} chains, and gives you one place to see every unlock coming to any wallet, plus email and push alerts before each one.`,
       },
       {
         q: "Who is Vestream for?",
@@ -76,7 +78,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "How do I start using Vestream?",
-        a: "Download the free Vestream app (iOS or Android), then add any wallet – an EVM 0x… address or a Solana pubkey – and Vestream automatically scans it across all 12+ protocols and 9+ chains. The Free plan tracks 3 wallets; Pro tracks 10. Prefer your browser? Paste a wallet at /find-vestings for an instant scan, no install.",
+        a: `Download the free Vestream app (iOS or Android), then add any wallet – an EVM 0x… address or a Solana pubkey – and Vestream automatically scans it across all ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains. The Free plan tracks 3 wallets; Pro tracks 10. Prefer your browser? Paste a wallet at /find-vestings for an instant scan, no install.`,
       },
       {
         q: "Do I need to connect my wallet to use Vestream?",
@@ -84,7 +86,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "Do I need to know what protocol my tokens are vested on?",
-        a: "No. When you add a wallet address, Vestream auto-scans all 11+ supported protocols across all 9+ chains (EVM + Solana) and surfaces every vesting stream found – you don't need to know in advance which platform your tokens are on.",
+        a: `No. When you add a wallet address, Vestream auto-scans all ${PUBLIC_PROTOCOL_COUNT} supported protocols across all ${PUBLIC_CHAIN_COUNT} chains (EVM + Solana) and surfaces every vesting stream found – you don't need to know in advance which platform your tokens are on.`,
       },
     ],
   },
@@ -95,15 +97,15 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "Which vesting protocols does Vestream support?",
-        a: "Twelve as of today: Sablier (linear and tranched streaming), Hedgey (NFT-based vesting plans), Superfluid (cliff + linear streaming via its VestingScheduler), LlamaPay (per-second token streaming for vesting and payroll), UNCX Network (TokenVesting and VestingManager locker contracts), Unvest (step/milestone vesting), Team Finance (team token vesting + on-chain lock proof, via its Squid subgraph), PinkSale PinkLock (TGE + cycle schedules), Streamflow (Solana's #1 vesting protocol), and Jupiter Lock (time-released token vesting on Solana). Each EVM protocol has its own adapter that normalises into a shared VestingStream shape; LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice while we build out per-wallet stream tracking.",
+        a: `${PUBLIC_PROTOCOL_COUNT} as of today: ${listProtocols().map((p) => p.name).join(", ")}. Each protocol has its own adapter that normalises its schedules into one shared format, so a wallet scan shows every vesting together whichever protocol it sits on.`,
       },
       {
         q: "Which blockchains are supported?",
-        a: "Eight production EVM chains plus Solana: Ethereum mainnet (chainId 1), BNB Chain (56), Polygon (137), Base (8453), Arbitrum One (42161), OP Mainnet (10), Avalanche C-Chain (43114), Robinhood Chain (4663), and Solana mainnet-beta (101). Ethereum Sepolia (11155111) and Base Sepolia (84532) are also supported for testing and contract deployments that haven't yet shipped on mainnet.",
+        a: `${PUBLIC_CHAIN_COUNT} production chains: ${publicChainIds().map((c) => CHAIN_NAMES[c as keyof typeof CHAIN_NAMES] ?? String(c)).join(", ")}. Not every protocol runs on every chain; each protocol page lists where it is indexed. Ethereum Sepolia is also supported for testing.`,
       },
       {
         q: "How does Vestream get the vesting data?",
-        a: "For five EVM protocols (Sablier, Hedgey, UNCX, UNCX-VestingManager, Unvest) we query each protocol's official subgraph on The Graph Network – same data source the protocol's own frontend uses. Superfluid is queried via its hosted subgraph. PinkSale has no subgraph, so we read the PinkLock V2 contract directly via viem RPC calls. Streamflow + Jupiter Lock are read directly from Solana via the protocols' SDKs and getProgramAccounts. LlamaPay's TVL is sourced from DefiLlama's vesting-specific slice. All data is public, on-chain, and matches what you'd see on the protocol's native UI.",
+        a: "From each protocol's own public sources: subgraphs and indexers where they are reliable, direct contract reads where they are not, and Solana program reads for Solana protocols. Where a third-party index can disagree with the chain (for example after a lock is transferred or split), we confirm the figures against the contract itself. All of it is public, on-chain data.",
       },
       {
         q: "How fresh is the data?",
@@ -184,7 +186,7 @@ const FAQ_DATA: FaqCategory[] = [
       },
       {
         q: "What counts as a \"wallet\" for plan limits?",
-        a: "A wallet is a distinct address you want scanned – EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet – we auto-scan all 12+ protocols and all 9+ chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).",
+        a: `A wallet is a distinct address you want scanned – EVM (0x…) or Solana (base58). If the same address has vestings on Sablier, Hedgey, UNCX and Streamflow, that still counts as one wallet – we auto-scan all ${PUBLIC_PROTOCOL_COUNT} protocols and all ${PUBLIC_CHAIN_COUNT} chains regardless of tier. The limit only bites when you want to track multiple different addresses (e.g. personal + team + investor wallets).`,
       },
       {
         q: "Can I cancel my subscription anytime?",
@@ -299,7 +301,7 @@ const FAQ_DATA: FaqCategory[] = [
     items: [
       {
         q: "I added my wallet but no streams are showing up. Why?",
-        a: "Three common causes, in order of likelihood: (1) the wallet genuinely has no vesting streams on any of the 11+ supported protocols on any of the 9+ chains; (2) the streams exist on a protocol or chain we don't yet support; (3) the data source (subgraph or Solana RPC) is temporarily rate-limited or unreachable. Refresh in 60 seconds, and if you still see nothing, check the address on the protocol's own frontend to confirm streams exist.",
+        a: `Three common causes, in order of likelihood: (1) the wallet genuinely has no vesting streams on any of the ${PUBLIC_PROTOCOL_COUNT} supported protocols on any of the ${PUBLIC_CHAIN_COUNT} chains; (2) the streams exist on a protocol or chain we don't yet support; (3) the data source (subgraph or Solana RPC) is temporarily rate-limited or unreachable. Refresh in 60 seconds, and if you still see nothing, check the address on the protocol's own frontend to confirm streams exist.`,
       },
       {
         q: "I'm not receiving email alerts – what should I check?",

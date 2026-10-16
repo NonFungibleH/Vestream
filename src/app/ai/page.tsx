@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CopyableCode } from "@/components/CopyableCode";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 // 2026-05-17 SEO/AI-search pass: previously this page only exported title +
 // description, missing OG/Twitter cards + canonical. That meant share links
@@ -268,7 +269,7 @@ export default function AiPage() {
         <div className="flex flex-col gap-5">
           <ToolCard
             name="get_wallet_vestings"
-            description="Get all token vesting streams for a wallet (EVM or Solana) across all 11+ supported protocols and 9+ chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock."
+            description={`Get all token vesting streams for a wallet (EVM or Solana) across all ${PUBLIC_PROTOCOL_COUNT} supported protocols and ${PUBLIC_CHAIN_COUNT} chains. Returns normalised data: token, locked/claimable/withdrawn amounts, schedule dates, cliff time, and next unlock.`}
             params={[
               { name: "address", type: "string", required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "protocol", type: "string", required: false, desc: "Filter by protocol: sablier, hedgey, uncx, unvest, superfluid, team-finance, pinksale, streamflow, jupiter-lock, smithii" },
@@ -287,7 +288,7 @@ export default function AiPage() {
             params={[
               { name: "address", type: "string",  required: true,  desc: "Wallet address – EVM 0x… or Solana base58 pubkey" },
               { name: "days",    type: "number",  required: false, desc: "Lookahead window in days (default: 30, max: 365)" },
-              { name: "protocol", type: "string", required: false, desc: "Filter by protocol (any of the 12+ protocols above)" },
+              { name: "protocol", type: "string", required: false, desc: `Filter by protocol (any of the ${PUBLIC_PROTOCOL_COUNT} protocols above)` },
             ]}
             example={`get_upcoming_unlocks({
   address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",

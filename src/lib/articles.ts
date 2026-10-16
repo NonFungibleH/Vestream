@@ -1,3 +1,4 @@
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 // ─── Article content types ────────────────────────────────────────────────────
 
 export type Block =
@@ -81,7 +82,7 @@ const articles: Article[] = [
         { q: "Do I need to connect my wallet?", a: "No. Tracking is read-only from the wallet address. You only connect a wallet at team.finance when you actually claim." },
       ] },
 
-      { type: "p", html: "Team Finance is one of 11+ vesting protocols Vestream tracks. To see every unlock across all of them, Sablier, Hedgey, UNCX, Streamflow and more, start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>." },
+      { type: "p", html: `Team Finance is one of ${PUBLIC_PROTOCOL_COUNT} vesting protocols Vestream tracks. To see every unlock across all of them, Sablier, Hedgey, UNCX, Streamflow and more, start with the <a href=\"/find-vestings\">free wallet scan</a>, or read the complete guide to <a href=\"/resources/what-is-token-vesting\">token vesting</a>.` },
     ],
   },
 
@@ -732,7 +733,7 @@ const articles: Article[] = [
       { type: "h2", text: "Track & explore token vesting on Vestream" },
       {
         type: "p",
-        html: "Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across 12+ protocols and 9+ chains, no sign-up. Start here:",
+        html: `Vestream is a free, on-chain <strong>token vesting tracker</strong>: paste any wallet and see every vesting position and upcoming unlock across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains, no sign-up. Start here:`,
       },
       {
         type: "ul",
@@ -4792,7 +4793,7 @@ const articles: Article[] = [
         type: "callout",
         emoji: "📊",
         title: "Skip the 6-hour January reconciliation",
-        body:  "Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all 11+ supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax – in about 60 seconds.",
+        body:  `Sign in to <a href=\"/login\">Vestream</a>, add your vesting wallets, and click Refresh in the Tax Reports tab. Every claim across all ${PUBLIC_PROTOCOL_COUNT} supported protocols, valued in USD at receipt, ready for Koinly / CoinTracker / TurboTax – in about 60 seconds.`,
       },
     ],
   },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import useSWR from "swr";
-import { PROTOCOL_CHIPS, publicChainOptions, publicProtocolOptions } from "@/lib/protocol-constants";
+import { PROTOCOL_CHIPS, publicChainOptions, publicProtocolOptions, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { isValidWalletAddress } from "@/lib/address-validation";
@@ -548,7 +548,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-sm font-semibold" style={{ color: "var(--preview-text)" }}>Wallet Scanner</h1>
             <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-              Scan 12+ protocols × 9+ chains to find every active vesting for a wallet
+              Scan {PUBLIC_PROTOCOL_COUNT} protocols × {PUBLIC_CHAIN_COUNT} chains to find every active vesting for a wallet
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -615,7 +615,7 @@ export default function DiscoverPage() {
                   Find every vesting on a wallet – live
                 </h2>
                 <p className="text-[12px] leading-relaxed max-w-xl" style={{ color: "var(--preview-text-3)" }}>
-                  Paste any wallet address. We hit all 12+ protocols across 9+ chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
+                  Paste any wallet address. We hit all {PUBLIC_PROTOCOL_COUNT} protocols across {PUBLIC_CHAIN_COUNT} chains in parallel and return every active vesting, including streams not yet indexed by the search universe.
                   Click <strong style={{ color: "var(--preview-text-2)" }}>Watch this</strong> to
                   pin individual vestings to your dashboard.
                 </p>
@@ -779,7 +779,7 @@ export default function DiscoverPage() {
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: "var(--preview-text)" }}>Scanning all platforms…</p>
               <p className="text-[11px]" style={{ color: "var(--preview-text-3)" }}>
-                Checking 12+ protocols × 9+ chains. This may take 10–20 seconds.
+                Checking {PUBLIC_PROTOCOL_COUNT} protocols × {PUBLIC_CHAIN_COUNT} chains. This may take 10–20 seconds.
               </p>
             </div>
           )}

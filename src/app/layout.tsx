@@ -7,6 +7,7 @@ import { Providers } from "@/components/Providers";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import MicrosoftClarity from "@/components/MicrosoftClarity";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,7 +56,7 @@ const IOS_APP_ID = process.env.NEXT_PUBLIC_IOS_APP_ID;
 // tracker" parks there until we relaunch.
 const SITE_TITLE       = "Vestream – Token Vesting Tracker & Unlock Alerts";
 const SITE_DESCRIPTION =
-  "Track every token vesting unlock you're owed across 12+ protocols and 9+ chains. Push alerts when cliffs hit, one-tap claims, tax-ready exports. Free, no signup.";
+  `Track every token vesting unlock you're owed across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains. Push alerts when cliffs hit, one-tap claims, tax-ready exports. Free, no signup.`;
 
 export const metadata: Metadata = {
   title: SITE_TITLE,

@@ -4,14 +4,15 @@
 // layout.tsx alongside, which Next.js merges into the route's <head>.
 
 import type { Metadata } from "next";
+import { PUBLIC_PROTOCOL_COUNT } from "@/lib/protocol-constants";
 
 export const metadata: Metadata = {
   title:       "Early Access – Vestream Token Vesting Tracker",
-  description: "Get early access to Vestream – the free tracker for every token vesting and unlock across 12+ protocols. Sign up in 30 seconds.",
+  description: `Get early access to Vestream – the free tracker for every token vesting and unlock across ${PUBLIC_PROTOCOL_COUNT} protocols. Sign up in 30 seconds.`,
   alternates:  { canonical: "https://www.vestream.io/early-access" },
   openGraph: {
     title:       "Early Access – Vestream Token Vesting Tracker",
-    description: "Get early access to Vestream – track every token unlock across 12+ protocols. Free, no credit card.",
+    description: `Get early access to Vestream – track every token unlock across ${PUBLIC_PROTOCOL_COUNT} protocols. Free, no credit card.`,
     url:         "https://www.vestream.io/early-access",
     siteName:    "Vestream",
     type:        "website",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   twitter: {
     card:        "summary_large_image",
     title:       "Early Access – Vestream Token Vesting Tracker",
-    description: "Get early access to Vestream – track every token unlock across 12+ protocols. Free, no credit card.",
+    description: `Get early access to Vestream – track every token unlock across ${PUBLIC_PROTOCOL_COUNT} protocols. Free, no credit card.`,
   },
 };
 

@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 interface Props {
   heading?: string;
@@ -42,7 +43,7 @@ export function ScanWalletCTA({ heading, sub, surface = "seo_page" }: Props) {
             {heading ?? "Track your own token vesting"}
           </p>
           <p className="text-sm mt-1 leading-relaxed" style={{ color: "#5b6470" }}>
-            {sub ?? "Paste any wallet, see every unlock across 12+ protocols and 9+ chains. Free, no sign-up."}
+            {sub ?? `Paste any wallet, see every unlock across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains. Free, no sign-up.`}
           </p>
         </div>
         <form

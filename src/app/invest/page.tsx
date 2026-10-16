@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /invest – Vestream Invest landing page.
@@ -26,11 +27,11 @@ import { AppStoreBadges } from "@/components/AppStoreBadges";
 
 export const metadata: Metadata = {
   title:       "Vestream Invest – Track every token vesting unlock you're owed",
-  description: "Never miss a token unlock from projects you've backed. Vestream tracks vestings across 12+ protocols and 9+ chains, with push alerts the second a cliff hits.",
+  description: `Never miss a token unlock from projects you've backed. Vestream tracks vestings across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains, with push alerts the second a cliff hits.`,
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
     title:       "Vestream Invest – Track every vesting unlock",
-    description: "12+ protocols. 9+ chains. One inbox for every cliff, TGE and linear unlock you're entitled to.",
+    description: `${PUBLIC_PROTOCOL_COUNT} protocols. ${PUBLIC_CHAIN_COUNT} chains. One inbox for every cliff, TGE and linear unlock you're entitled to.`,
     type:        "website",
     url:         "https://www.vestream.io/invest",
   },
@@ -77,7 +78,7 @@ export default function InvestLanding() {
             className="max-w-2xl text-base md:text-lg mb-8"
             style={{ color: "#475569", lineHeight: 1.6 }}
           >
-            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across twelve vesting protocols and nine chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
+            Vestream tracks every cliff, TGE and linear unlock you&rsquo;re owed across {PUBLIC_PROTOCOL_COUNT} vesting protocols and {PUBLIC_CHAIN_COUNT} chains. Push alerts to your phone the second something unlocks. One-tap claim links straight to the protocol. Tax-ready CSV at year-end.
           </p>
 
           {/* Primary funnel CTA */}

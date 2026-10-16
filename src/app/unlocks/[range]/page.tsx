@@ -29,7 +29,7 @@ import {
 import { withTimeout } from "@/lib/with-timeout";
 import { getLastGoodUnlocksRangeData, setLastGoodUnlocksRangeData } from "@/lib/vesting/page-data-fallback";
 import { CHAIN_NAMES } from "@/lib/vesting/types";
-import { listProtocols } from "@/lib/protocol-constants";
+import { listProtocols, PUBLIC_PROTOCOL_COUNT } from "@/lib/protocol-constants";
 import { getQuickUsdPrices, toUsdValue, formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
 // Marketing-page tease: top N rows visible to all visitors, the rest
@@ -200,7 +200,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const title  = labelHasDate
     ? `Token unlocks ${labelLower} | Vestream`
     : `Token unlocks ${labelLower} – ${dateStr} | Vestream`;
-  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of 11+ vesting protocols.`;
+  const desc   = `${countLine}${dynDesc} Live data from Vestream's index of ${PUBLIC_PROTOCOL_COUNT} vesting protocols.`;
   const url    = `https://www.vestream.io/unlocks/${range}`;
 
   return {

@@ -12,7 +12,7 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
-import { protocolBrand, protocolIcon, chainBrand, chainIcon } from "@/lib/protocol-constants";
+import { protocolBrand, protocolIcon, chainBrand, chainIcon, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import FindVestingsClient from "./FindVestingsClient";
 
 export const metadata: Metadata = {
@@ -49,7 +49,7 @@ const findVestingsJsonLd = {
       "@id":   "https://www.vestream.io/find-vestings#howto",
       name:    "How to find every token vesting unlock for a wallet",
       description:
-        "Scan any wallet address across 11+ vesting protocols and 9+ chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana) to surface every unlock schedule – cliffs, linear streams, step releases, claimable balances.",
+        `Scan any wallet address across ${PUBLIC_PROTOCOL_COUNT} vesting protocols and ${PUBLIC_CHAIN_COUNT} chains (Ethereum, Base, BNB, Polygon, Arbitrum, Optimism, Avalanche, Solana) to surface every unlock schedule – cliffs, linear streams, step releases, claimable balances.`,
       totalTime: "PT30S",
       supply:    { "@type": "HowToSupply", name: "An EVM or Solana wallet address" },
       tool:      { "@type": "HowToTool",   name: "A web browser" },
@@ -106,7 +106,7 @@ export default function FindVestingsPage() {
             border: "1px solid rgba(28,184,184,0.2)",
           }}
         >
-          Free · No signup · 12+ protocols · 9+ chains
+          Free · No signup · {PUBLIC_PROTOCOL_COUNT} protocols · {PUBLIC_CHAIN_COUNT} chains
         </div>
 
         <h1

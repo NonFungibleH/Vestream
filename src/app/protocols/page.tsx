@@ -29,7 +29,7 @@ import { GradientCta } from "@/components/GradientCta";
 import { UpcomingUnlockTicker } from "@/components/UpcomingUnlockTicker";
 import { getUpcomingUnlocksEnriched } from "@/lib/vesting/upcoming-unlocks";
 import { TvlComparisonBar } from "@/components/TvlComparisonBar";
-import { chainBrand, chainIcon, listProtocols, protocolIcon, type ProtocolMeta } from "@/lib/protocol-constants";
+import { chainBrand, chainIcon, listProtocols, protocolIcon, type ProtocolMeta, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 import {
   getAllProtocolStatsMap,
   foldProtocolStats,
@@ -259,7 +259,7 @@ const loadProtocolsData = unstable_cache(
 export const metadata: Metadata = {
   title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
   description:
-    "Live token unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Streamflow, Jupiter Lock and more, across 9+ chains, EVM and Solana.",
+    `Live token unlock trackers for Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Streamflow, Jupiter Lock and more, across ${PUBLIC_CHAIN_COUNT} chains, EVM and Solana.`,
   alternates: { canonical: "https://www.vestream.io/protocols" },
   openGraph: {
     title: "Token Unlock Trackers for Every Vesting Protocol | Vestream",
@@ -617,7 +617,7 @@ export default async function UnlocksIndexPage() {
               className="text-sm md:text-base mb-8 max-w-xl mx-auto"
               style={{ color: "rgba(255,255,255,0.65)" }}
             >
-              Paste any address – we&apos;ll scan all 12+ protocols across EVM and Solana
+              Paste any address – we&apos;ll scan all {PUBLIC_PROTOCOL_COUNT} protocols across EVM and Solana
               and surface every stream, lock, and unlock you&apos;re owed. Free, no signup.
             </p>
             <Link

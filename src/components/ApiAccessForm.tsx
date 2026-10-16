@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { track } from "@/lib/analytics";
+import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 /** Server response is intentionally minimal to prevent email enumeration –
  *  the actual API key (new or existing-key recovery info) lands via email,
@@ -73,7 +74,7 @@ export function ApiAccessForm() {
           <ul className="text-xs space-y-1 text-left" style={{ color: "rgba(255,255,255,0.65)" }}>
             <li>• 30 requests / minute (burst)</li>
             <li>• 150 requests / day</li>
-            <li>• All 12+ protocols + 9+ chains</li>
+            <li>• All {PUBLIC_PROTOCOL_COUNT} protocols + {PUBLIC_CHAIN_COUNT} chains</li>
             <li>• REST + MCP server access</li>
           </ul>
         </div>

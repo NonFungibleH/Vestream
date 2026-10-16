@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { CHAIN_NAMES, type SupportedChainId } from "@/lib/vesting/types";
-import { protocolBrand } from "@/lib/protocol-constants";
+import { protocolBrand, PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
 type Activity = {
   streamId:        string;
@@ -189,7 +189,7 @@ export function LiveActivityTicker() {
         {data && rows.length === 0 && (
           <div className="px-4 md:px-5 py-6 text-center">
             <div className="text-sm font-semibold mb-1" style={{ color: "#0f172a" }}>
-              Watching 12+ protocols across 9+ chains
+              Watching {PUBLIC_PROTOCOL_COUNT} protocols across {PUBLIC_CHAIN_COUNT} chains
             </div>
             <div className="text-xs" style={{ color: "#94a3b8" }}>
               The moment a tracked wallet lands on any protocol, it streams into this feed.
