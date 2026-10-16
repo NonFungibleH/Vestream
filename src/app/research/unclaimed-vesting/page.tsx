@@ -24,7 +24,7 @@ import {
 const URL_ = "https://www.vestream.io/research/unclaimed-vesting";
 const TITLE = "Unclaimed Token Vesting: What Happens After Tokens Unlock (Oct 2026)";
 const DESC =
-  "An on-chain study of about 1.28 million finished vesting schedules across 8 protocols and 26 chains: how often unlocked tokens are never claimed, how much they are worth, and how the numbers were measured.";
+  "An on-chain study of about 1.28 million finished vesting schedules across 8 protocols, on EVM chains and Solana: how often unlocked tokens are never claimed, how much they are worth, and how the numbers were measured.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -37,7 +37,6 @@ export const metadata: Metadata = {
 const fmt = (n: number) => n.toLocaleString("en-GB");
 const usd = (n: number) =>
   n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${Math.round(n / 1_000)}K` : `$${n}`;
-const CHAINS_TOTAL = 26;
 
 export default function UnclaimedVestingResearch() {
   const rows = UNCLAIMED_SUMMARY;
@@ -94,7 +93,7 @@ export default function UnclaimedVestingResearch() {
         <p className="text-lg leading-relaxed mb-8" style={{ color: "#475569" }}>
           Most analysis of token vesting stops at the unlock date. This study looks at what happens next.
           We read about {fmt(Math.round(estTotal / 10_000) * 10_000)} finished vesting schedules across{" "}
-          {rows.length} protocols and {CHAINS_TOTAL} chains, directly from their contracts, and measured how
+          {rows.length} protocols, on EVM chains and Solana, directly from their contracts, and measured how
           many of them still hold tokens their recipient never collected.
         </p>
 
@@ -166,6 +165,7 @@ export default function UnclaimedVestingResearch() {
 
         <h2 className={h2}>How it was measured</h2>
         <ul className="list-disc pl-5 mb-6 space-y-2 text-base leading-relaxed">
+          <li><strong>Coverage varies by protocol.</strong> Sablier was measured across 25 EVM chains; the other protocols run on between one and six chains each, including Solana. Each protocol&rsquo;s chains are listed in the table.</li>
           <li><strong>Finished</strong> means the schedule&rsquo;s end date was more than 30 days before measurement (before 6 September 2026).</li>
           <li><strong>Unclaimed</strong> means more than 1% of the schedule&rsquo;s total is still held for the recipient. <strong>Never claimed</strong> means nothing was ever withdrawn.</li>
           <li><strong>Sources.</strong> Each protocol was read from its own contracts or program accounts: Sablier from its live indexer with on-chain spot checks; Hedgey from its event history on all four plan contracts; UNCX, Team Finance and Smithii directly from contract and vault balances; Unvest from its subgraph, reconciled to on-chain balances; Streamflow and Jupiter Lock from seeded random samples of 6,000 accounts each.</li>

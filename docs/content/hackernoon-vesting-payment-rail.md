@@ -16,7 +16,7 @@ A vesting contract is value released on a schedule and enforced by code. Nobody 
 
 That description fits a salary. It fits a pension, a grant, a stock option, a bonus paid in instalments and an investor lockup. Paying people over time is one of the oldest jobs in finance, and crypto built a programmable, global, permissionless version of it years ago. It then treated it as a niche tool for token launches.
 
-Over the past few weeks I measured what actually happens to vested tokens once they unlock. I read about 1.28 million finished schedules across eight protocols and 26 chains, directly from their contracts: 835,908 individually, plus random samples covering an estimated 442,500 more on two Solana protocols ([full method and data](https://www.vestream.io/research/unclaimed-vesting)). It's the first study I know of to cover the category rather than a single protocol.
+Over the past few weeks I measured what actually happens to vested tokens once they unlock. I read about 1.28 million finished schedules across eight protocols, on Ethereum, Solana and other EVM chains, directly from their contracts: 835,908 individually, plus random samples covering an estimated 442,500 more on two Solana protocols ([full method and data](https://www.vestream.io/research/unclaimed-vesting)). Coverage varies by protocol: Sablier spans 25 chains, while the others run on between one and six. It's the first study I know of to cover the category rather than a single protocol.
 
 What I found is that the mechanism works. Almost everything around it doesn't.
 
