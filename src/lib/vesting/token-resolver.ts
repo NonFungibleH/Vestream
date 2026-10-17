@@ -154,7 +154,12 @@ export async function resolveTokenMeta(
   const hintSymbol = hints?.existingSymbol?.trim();
   const hintDecimals = hints?.existingDecimals;
   const symbolIsUsable = hintSymbol && hintSymbol.toLowerCase() !== "unknown";
-  const decimalsIsUsable = typeof hintDecimals === "number" && Number.isFinite(hintDecimals);
+  // A hint of 0 is not trusted on its own: Sablier's Envio indexer reports
+  // decimals 0 for some 18-decimal tokens, and a 0 makes every raw amount read
+  // as whole tokens (QOIN on Base showed 5.4 quintillion vesting against a
+  // 395M supply, 2026-10-17). Real 0-decimal tokens exist, so a 0 is confirmed
+  // on-chain rather than overridden.
+  const decimalsIsUsable = typeof hintDecimals === "number" && Number.isFinite(hintDecimals) && hintDecimals > 0;
 
   if (symbolIsUsable && decimalsIsUsable) {
     const meta = { symbol: hintSymbol!, decimals: hintDecimals! };
@@ -170,7 +175,7 @@ export async function resolveTokenMeta(
     // entirely to hints + shortAddress.
     const meta = {
       symbol:   symbolIsUsable ? hintSymbol! : shortAddress(lowered),
-      decimals: decimalsIsUsable ? hintDecimals! : 18,
+      decimals: typeof hintDecimals === "number" && Number.isFinite(hintDecimals) ? hintDecimals : 18,
     };
     cache.set(key, { ...meta, resolvedAt: Date.now() });
     return meta;
@@ -200,7 +205,7 @@ export async function resolveTokenMeta(
     decimals = hintDecimals!;
   } else {
     const onChain = await callDecimals(client, checksummed);
-    decimals = onChain ?? 18;
+    decimals = onChain ?? hintDecimals ?? 18;
   }
 
   const meta = { symbol, decimals };
