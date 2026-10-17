@@ -255,6 +255,10 @@ export async function generateMetadata(
   const knownEmpty = !isBuild && data !== null && overview === null;
 
   const symbol  = market.tokenName || overview?.tokenSymbol || truncate(addr);
+  // Titles lead with the ticker people search for ("arb token unlock
+  // schedule"), not the market name: ARB's market name is "Arbitrum", which
+  // read "Arbitrum vesting & unlock schedule on Arbitrum".
+  const ticker  = overview?.tokenSymbol || symbol;
   const chain   = CHAIN_NAMES[cid];
   const locked  = overview ? fmtTokens(overview.lockedTokensWhole) : "0";
   // No vesting: say so in the title rather than claiming "unlocks on
@@ -268,10 +272,10 @@ export async function generateMetadata(
   // these pages already rank (positions 5–10), and Google bolds an exact match.
   const title   = knownEmpty
     ? `No vesting found for ${symbol} on ${chain} | Vestream`
-    : `${symbol} vesting & unlock schedule on ${chain} | Vestream`;
+    : `${ticker} vesting & unlock schedule on ${chain} | Vestream`;
   const protocols = overview?.protocolMix.length ?? 0;
   const desc    = overview
-    ? `${symbol} (${addr}) on ${chain}: ${locked} ${symbol} still vesting across ${protocols} protocol${protocols === 1 ? "" : "s"}. Unlock calendar, next unlock date and top recipients.`
+    ? `${ticker} (${addr}) on ${chain}: ${locked} ${ticker} still vesting across ${protocols} protocol${protocols === 1 ? "" : "s"}. Unlock calendar, next unlock date and top recipients.`
     : knownEmpty
       ? `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across ${PUBLIC_PROTOCOL_COUNT} protocols.`
       : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
