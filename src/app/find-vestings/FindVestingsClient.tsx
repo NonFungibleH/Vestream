@@ -1146,7 +1146,7 @@ function StickyAppBar({ totalStreams, walletAddress, anchorRef }: { totalStreams
               Track {totalStreams === 1 ? "this" : `${totalStreams}`} in the app
             </div>
             <div className="text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.65)" }}>
-              Push alerts · one-tap claims
+              Push alerts · claim links
             </div>
           </div>
         </div>

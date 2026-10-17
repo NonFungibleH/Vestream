@@ -44,6 +44,8 @@ interface PageParams {
 function fmtTokenAmount(amount: string, decimals: number): string {
   try {
     const n = Number(BigInt(amount)) / Math.pow(10, decimals);
+    if (n >= 1e15) return `${Math.round(n / 1e12).toLocaleString("en-US")}T`;
+    if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
     if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
     if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -76,8 +78,8 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
     const m    = matches[0];
     const chain = CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`;
     return {
-      title:       `${display} unlock schedule on ${chain} | Vestream`,
-      description: `Track ${display} vesting on ${chain} – ${m.streamCount.toLocaleString()} streams, ${m.walletCount.toLocaleString()} wallets, live unlock calendar.`,
+      title:       `${display} vesting & unlock schedule on ${chain} | Vestream`,
+      description: `${display} vesting on ${chain}: ${m.streamCount.toLocaleString()} stream${m.streamCount === 1 ? "" : "s"} across ${m.walletCount.toLocaleString()} wallet${m.walletCount === 1 ? "" : "s"}. Unlock calendar, next unlock date and top recipients.`,
       alternates:  { canonical: `https://www.vestream.io/token/${m.chainId}/${m.address}` },
     };
   }
@@ -88,7 +90,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   // Polygon…" in search snippets.
   const chainList = [...new Set(matches.map((m) => CHAIN_NAMES[m.chainId as keyof typeof CHAIN_NAMES] ?? `chain ${m.chainId}`))].join(", ");
   return {
-    title:       `${display} vesting & unlocks across ${matches.length} chains | Vestream`,
+    title:       `${display} vesting & unlock schedule across ${matches.length} chains | Vestream`,
     description: `${display} is vesting on ${chainList}. Live unlock schedules, top recipients, and upcoming unlocks for each chain.`,
     alternates:  { canonical: url },
     openGraph: {

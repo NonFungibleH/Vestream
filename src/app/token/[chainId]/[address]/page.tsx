@@ -174,6 +174,10 @@ function fmtUsd(n: number | null, compact = true): string {
 
 function fmtTokens(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "–";
+  // Memecoins can have trillion-scale supplies; stopping at "B" printed a
+  // 13-digit "billion" into the search snippet.
+  if (n >= 1e15) return `${Math.round(n / 1e12).toLocaleString("en-US")}T`;
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -259,11 +263,15 @@ export async function generateMetadata(
   // random or made-up address was a thin, indexable page with a FAQ block
   // about a schedule that does not exist (2026-09-12). follow stays on so
   // the links out to /find-vestings and /unlocks still carry.
+  // Titles follow how people search ("<token> unlock schedule"), and the
+  // description carries the full contract address: address searches are where
+  // these pages already rank (positions 5–10), and Google bolds an exact match.
   const title   = knownEmpty
     ? `No vesting found for ${symbol} on ${chain} | Vestream`
-    : `${symbol} unlocks on ${chain} | Vestream`;
+    : `${symbol} vesting & unlock schedule on ${chain} | Vestream`;
+  const protocols = overview?.protocolMix.length ?? 0;
   const desc    = overview
-    ? `${locked} ${symbol} still vesting across ${overview.protocolMix.length} protocol${overview.protocolMix.length === 1 ? "" : "s"}. Live unlock calendar, top recipients, and 30-day pressure.`
+    ? `${symbol} (${addr}) on ${chain}: ${locked} ${symbol} still vesting across ${protocols} protocol${protocols === 1 ? "" : "s"}. Unlock calendar, next unlock date and top recipients.`
     : knownEmpty
       ? `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across ${PUBLIC_PROTOCOL_COUNT} protocols.`
       : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;
@@ -691,6 +699,17 @@ export default async function TokenPage(
           >
             {answerSummary}
           </p>
+          {/* Scope line. People searching "<token> unlock schedule" often want
+              the project's whole team/investor schedule; for a large token this
+              page shows only the slice held in the protocols we index (ARB:
+              99 streams across 10 wallets). Saying so keeps the page honest. */}
+          {hasVesting && (
+            <p className="mt-2 px-1 text-xs leading-relaxed" style={{ color: "#8B8E92" }}>
+              Covers {symbol} vesting held in the {PUBLIC_PROTOCOL_COUNT} vesting protocols Vestream tracks. Allocations a
+              project vests through its own contracts aren&apos;t included.{" "}
+              <Link href="/protocols" className="underline" style={{ color: "#0F8A8A" }}>Which protocols?</Link>
+            </p>
+          )}
         </section>
       )}
 
