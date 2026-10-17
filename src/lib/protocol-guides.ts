@@ -18,22 +18,22 @@
 
 import { getArticle } from "./articles";
 
-interface GuideSlugs { explainer?: string; howTo?: string }
+interface GuideSlugs { explainer?: string; howTo?: string; claim?: string }
 
 export const PROTOCOL_GUIDE_SLUGS: Record<string, GuideSlugs> = {
   "sablier":      { explainer: "sablier-token-streaming-vesting-explained", howTo: "how-to-track-sablier-unlocks" },
   "sablier-flow": { explainer: "sablier-token-streaming-vesting-explained" },
-  "hedgey":       { explainer: "hedgey-nft-vesting-plans-explained",        howTo: "how-to-track-hedgey-unlocks" },
+  "hedgey":       { explainer: "hedgey-nft-vesting-plans-explained",        howTo: "how-to-track-hedgey-unlocks", claim: "how-to-claim-hedgey-vesting-tokens" },
   "team-finance": { explainer: "how-to-track-team-finance-vesting" },
   "uncx":         { explainer: "uncx-token-lockers-and-vesting" },
-  "unvest":       { explainer: "what-is-unvest-token-vesting" },
+  "unvest":       { explainer: "what-is-unvest-token-vesting", claim: "how-to-claim-unvest-vested-tokens" },
   "superfluid":   { explainer: "superfluid-cliff-and-streaming-vesting" },
-  "pinksale":     { explainer: "what-is-pinksale-pinklock-token-locker" },
+  "pinksale":     { explainer: "what-is-pinksale-pinklock-token-locker", claim: "how-to-unlock-pinksale-pinklock-tokens" },
   "streamflow":   { explainer: "streamflow-solana-vesting" },
   "llamapay":     { explainer: "crypto-payroll-and-contributor-income-guide" },
-  "jupiter-lock": { explainer: "what-is-jupiter-lock-solana-token-vesting" },
+  "jupiter-lock": { explainer: "what-is-jupiter-lock-solana-token-vesting", claim: "how-to-claim-jupiter-lock-tokens" },
   "smithii":      { explainer: "what-is-smithii-solana-token-vesting" },
-  "hoodlock":     { explainer: "what-is-hoodlock-robinhood-chain-token-locker" },
+  "hoodlock":     { explainer: "what-is-hoodlock-robinhood-chain-token-locker", claim: "how-to-withdraw-hoodlock-tokens" },
   "magna":        { explainer: "what-is-magna-token-vesting" },
 };
 
@@ -44,12 +44,12 @@ function linkTitle(title: string): string {
   return title.replace(/\s*\(\d{4}\)\s*$/, "");
 }
 
-/** Explainer first, then the tracking guide. Missing articles are skipped. */
+/** Explainer first, then the tracking guide, then the claim guide. Missing articles are skipped. */
 export function protocolGuides(protocolSlug: string): ProtocolGuide[] {
   const slugs = PROTOCOL_GUIDE_SLUGS[protocolSlug];
   if (!slugs) return [];
   const out: ProtocolGuide[] = [];
-  for (const s of [slugs.explainer, slugs.howTo]) {
+  for (const s of [slugs.explainer, slugs.howTo, slugs.claim]) {
     if (!s) continue;
     const a = getArticle(s);
     if (a) out.push({ slug: a.slug, title: linkTitle(a.title), href: `/resources/${a.slug}` });

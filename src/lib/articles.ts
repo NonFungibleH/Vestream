@@ -27,6 +27,321 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── Answer-first explainer (2026-10-17). Search Console's generative-AI
+  //    report showed answer-shaped pages being cited; this one answers the
+  //    question the unclaimed-vesting study raises, with the study's figures. ──
+  {
+    slug:        "what-happens-to-unclaimed-vested-tokens",
+    title:       "What Happens to Unclaimed Vested Tokens? (2026)",
+    excerpt:     "Unclaimed vested tokens stay in the vesting contract until the recipient claims them. They don't arrive automatically, they don't usually expire, and on-chain data shows a lot of them are never collected. Here's what happens to them, and how to check whether you have any.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "5 min read",
+    category:    "Research",
+    tags:        ["unclaimed tokens", "unclaimed vesting", "token unlock", "how to claim", "vesting research"],
+    content: [
+      { type: "p", html: "<strong>Unclaimed vested tokens stay in the vesting contract, still owed to the recipient, until the recipient claims them.</strong> On most vesting platforms an unlock doesn't send anything to your wallet: it only makes the tokens claimable. Nothing expires on the platforms covered in our guides, so the tokens can sit there for years. Whether they are still worth anything depends on the token, not the contract." },
+
+      { type: "h2", text: "Why unlocked tokens don't just arrive" },
+      { type: "p", html: "Most crypto vesting is <strong>pull</strong>, not push. The contract releases value on a schedule, but moving it into your wallet takes a transaction from you: connect the right wallet, open the protocol's app and claim. A salary arrives because the payer's side sends it. A vesting tranche waits until the person being paid fetches it." },
+
+      { type: "h2", text: "How many vested tokens go unclaimed" },
+      { type: "p", html: `Vestream measured this directly. Across about 1.28 million finished vesting schedules on eight protocols, read from their contracts in October 2026 (<a href="/research/unclaimed-vesting">full study, method and data</a>):` },
+      { type: "ul", items: [
+        "<strong>Nearly 9 in 10</strong> unclaimed schedules had never been claimed even once. People claim everything or nothing.",
+        "<strong>Up to $9.5M</strong> was still unclaimed in tokens that still trade.",
+        "One grant worth about <strong>$11,000</strong>, in a token with a healthy market, had finished 20 months earlier and was never touched.",
+      ] },
+      { type: "table", headers: ["Protocol", "Finished schedules still unclaimed"], rows: [
+        ["Jupiter Lock", "2.9% (sample)"],
+        ["Streamflow", "26.1% (sample)"],
+        ["Sablier", "30.3% (excluding one airdrop)"],
+        ["Hedgey", "40.9%"],
+        ["UNCX", "48.1% (excluding two mass distributions)"],
+        ["Smithii", "60.7%"],
+        ["Team Finance", "66.3% of allocations (excluding mass distributions)"],
+        ["Unvest", "87.0%"],
+      ] },
+      { type: "p", html: "These rates say more about how each platform is used than about the platform. Protocols that carry many airdrops and small community distributions show higher rates than those used mainly for team and investor grants." },
+
+      { type: "h2", text: "Do unclaimed vested tokens expire?" },
+      { type: "p", html: `Usually not. Jupiter Lock's documentation says there is no expiration on the right to claim, and HoodLock's says unclaimed vesting never lapses. On PinkSale vesting locks, unclaimed cycles simply accumulate. Unless a specific programme sets its own claim deadline, unlocked tokens stay claimable indefinitely. That's also why they get forgotten: there's no reminder and no consequence for waiting.` },
+
+      { type: "h2", text: "Can the project take them back?" },
+      { type: "p", html: "Only in limited cases, and normally not what has already vested. Some schedules are revocable or cancellable, but only if the project enabled that when it created them. On revocable Hedgey plans, revoking returns the <em>unvested</em> remainder to the project while what had already vested stays claimable by the recipient. Many vesting deployments switch cancellation off entirely." },
+
+      { type: "h2", text: "Three reasons to claim sooner" },
+      { type: "ul", items: [
+        "<strong>The token can lose its market.</strong> In the study, 87% of unclaimed Sablier streams were in tokens that no longer had a market. Value that was claimable can become worthless while it waits.",
+        "<strong>Contract risk stays with you.</strong> Tokens left in a shared vesting contract remain exposed to that contract. In October 2026 a shared vesting pool on one major platform was exploited and tokens belonging to many projects were drained.",
+        `<strong>Tax may already be due.</strong> In the UK, the vesting date is usually the taxable point for employee share awards, and HMRC's closest guidance for tokens points the same way. You may owe tax on tokens you haven't claimed. See <a href="/resources/uk-tax-vesting-tokens-vest-or-claim">UK tax on vesting tokens</a>.`,
+      ] },
+
+      { type: "h2", text: "How to check whether you have unclaimed tokens" },
+      { type: "ol", items: [
+        `Paste each wallet you've used into <a href="/find-vestings">Vestream's free wallet scan</a>. It checks ${PUBLIC_PROTOCOL_COUNT} vesting protocols across EVM chains and Solana, with no sign-up or wallet connection.`,
+        "Look for positions that show tokens <strong>claimable now</strong>, especially ones whose schedule has already ended.",
+        "Claim on the protocol's own app. Step-by-step guides: <a href=\"/resources/how-to-unlock-pinksale-pinklock-tokens\">PinkSale PinkLock</a>, <a href=\"/resources/how-to-claim-jupiter-lock-tokens\">Jupiter Lock</a>, <a href=\"/resources/how-to-claim-hedgey-vesting-tokens\">Hedgey</a>, <a href=\"/resources/how-to-claim-unvest-vested-tokens\">Unvest</a> and <a href=\"/resources/how-to-withdraw-hoodlock-tokens\">HoodLock</a>.",
+        "Turn on unlock alerts for the wallets you track, so the next tranche doesn't wait months.",
+      ] },
+
+      { type: "h2", text: "Unclaimed vested tokens FAQ" },
+      { type: "faq", items: [
+        { q: "What happens to unclaimed vested tokens?", a: "They stay in the vesting contract, still owed to the recipient, until the recipient claims them. Most platforms don't send unlocked tokens automatically and don't set an expiry." },
+        { q: "Do vested tokens go to my wallet automatically?", a: "On most crypto vesting platforms, no. An unlock makes tokens claimable, and you have to claim them with a transaction from the recipient wallet." },
+        { q: "How much vested crypto goes unclaimed?", a: "In Vestream's October 2026 study of about 1.28 million finished vesting schedules across eight protocols, nearly 9 in 10 unclaimed schedules had never been claimed even once, and up to $9.5M was still unclaimed in tokens that still trade." },
+        { q: "Can I still claim tokens that unlocked years ago?", a: "Usually yes. Unless the programme set its own deadline, unlocked tokens stay claimable. Whether they are still worth anything depends on whether the token still has a market." },
+        { q: "Do I pay tax on vested tokens I haven't claimed?", a: "Possibly. In the UK the vesting date is usually the taxable point for employee share awards, and HMRC's closest guidance for tokens points the same way, although there's no definitive rule. Check with a tax adviser." },
+      ] },
+    ],
+  },
+
+
+  // ── Claim guides (2026-10-17). Search Console showed protocol-name queries
+  //    ("pinklock", "pinksale lock", "jupiter lock", "jup lock", "hoodlock",
+  //    "unvest", "hedgey") ranking around positions 5–30 with no answer page.
+  //    Each guide follows the protocol's OWN documentation for the steps and
+  //    cites it; Vestream's part is finding the position, not claiming it
+  //    (in-app claiming is switched off in the app). UNCX's guide is held while
+  //    its Vesting V2 incident (Oct 2026) is open. ─────────────────────────────
+  {
+    slug:        "how-to-unlock-pinksale-pinklock-tokens",
+    title:       "How to Unlock or Claim Tokens from a PinkSale PinkLock (2026)",
+    excerpt:     "A PinkSale PinkLock never sends your tokens automatically. When the lock ends, or a vesting cycle completes, the owner wallet has to click Unlock. Here's exactly how, why the button might not appear, and how to find a lock you've lost track of.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "5 min read",
+    category:    "Guides",
+    tags:        ["PinkSale", "PinkLock", "pinksale lock", "how to unlock", "claim vesting"],
+    content: [
+      { type: "callout", emoji: "🔓", title: "The short version", body: "Connect the wallet that owns the lock, open PinkLock → Token → My Lock, click View on the lock, then Unlock. For a vesting lock, Unlock releases every cycle that has completed so far. Nothing arrives on its own, and only the owner wallet can do it." },
+      { type: "p", html: `<strong>PinkLock</strong> is PinkSale's token locker. Projects use it in two ways: a <strong>simple lock</strong>, where the whole amount is held until one date, and a <strong>vesting lock</strong>, where a share unlocks at TGE and the rest releases in cycles. Either way, the tokens sit in the PinkLock contract until the lock's owner withdraws them. For background on the two lock types, see <a href="/resources/what-is-pinksale-pinklock-token-locker">what PinkSale PinkLock is</a>.` },
+
+      { type: "h2", text: "How to unlock a PinkLock, step by step" },
+      { type: "p", html: `These steps follow <a href="https://docs.pinksale.finance/pinklock/how-to-unlock" rel="nofollow">PinkSale's own unlock guide</a>.` },
+      { type: "ol", items: [
+        "Connect the wallet that was set as the lock's <strong>owner</strong>. No other wallet can unlock it.",
+        `Go to <a href="https://www.pinksale.finance/pinklock" rel="nofollow">PinkLock</a> → Token, and switch to the chain the lock is on.`,
+        "Open the <strong>My Lock</strong> tab, find your lock and click <strong>View</strong>.",
+        "Once the lock has expired, or a vesting cycle has completed, click <strong>Unlock</strong>.",
+        "Confirm the transaction in your wallet and pay the network gas fee. The tokens go to the owner wallet.",
+      ] },
+
+      { type: "h2", text: "Vesting locks: what Unlock releases" },
+      { type: "p", html: "A vesting lock releases a <strong>TGE percentage</strong> on the listing date, then a <strong>cycle release percentage</strong> every cycle (for example, every 30 days). You don't need to claim on the day each cycle ends. Completed cycles accumulate, and one Unlock withdraws everything available up to that point, so missing a cycle costs you nothing except time." },
+      { type: "table", headers: ["Example lock", "Value"], rows: [
+        ["Total locked", "10,000 tokens"],
+        ["TGE release (20%)", "2,000 at listing"],
+        ["Cycle release (40% every 30 days)", "4,000 after cycle 1, 4,000 after cycle 2"],
+      ] },
+      { type: "p", html: "This example is the one PinkSale uses in its <a href=\"https://docs.pinksale.finance/launchpads/team-vesting\" rel=\"nofollow\">team vesting docs</a>." },
+
+      { type: "h2", text: "Why the Unlock button isn't showing" },
+      { type: "ul", items: [
+        "<strong>Wrong wallet.</strong> Only the owner wallet sees an active Unlock. If ownership was transferred, the new owner unlocks it.",
+        "<strong>Wrong chain.</strong> PinkLock runs separately on each chain. Switch network in both PinkSale and your wallet.",
+        "<strong>Too early.</strong> Before the end date (or before the next cycle completes) there is nothing to release yet.",
+        "<strong>Ownership was renounced.</strong> Renouncing sends the lock's ownership to a dead address. After that, nobody can unlock the remaining tokens, ever.",
+      ] },
+
+      { type: "h2", text: "Can't find your lock?" },
+      { type: "p", html: `If you received tokens through a PinkSale vesting lock and don't know which chain or lock ID it's on, paste the wallet into <a href="/find-vestings">Vestream's free wallet scan</a>. It reads PinkLock on Ethereum, BNB Chain, Polygon and Base, alongside ${PUBLIC_PROTOCOL_COUNT - 1} other vesting protocols, and shows what's locked, what's unlockable now and the next release date. You still unlock on PinkSale itself; Vestream only finds it for you. The <a href="/protocols/pinksale">PinkSale unlock tracker</a> lists upcoming releases across every PinkLock vesting we index.` },
+
+      { type: "h2", text: "PinkLock unlock FAQ" },
+      { type: "faq", items: [
+        { q: "Does PinkLock send tokens automatically when the lock ends?", a: "No. Tokens stay in the PinkLock contract until the owner wallet clicks Unlock and confirms the transaction. There's no automatic release." },
+        { q: "Is there a fee to unlock a PinkLock?", a: "You pay the network gas fee for the unlock transaction. PinkSale's unlock guide doesn't mention any separate PinkSale fee for unlocking." },
+        { q: "What happens if I miss a vesting cycle?", a: "Nothing is lost. Completed cycles accumulate, and the next Unlock withdraws everything that has vested so far." },
+        { q: "Can someone else unlock my PinkLock?", a: "No. Only the wallet set as the lock owner can unlock it. If ownership is renounced, no one can unlock the remaining tokens." },
+        { q: "How do I find which chain my PinkLock is on?", a: "Paste your wallet into Vestream's free scan. It checks PinkLock on Ethereum, BNB Chain, Polygon and Base and shows each lock with its next release date." },
+      ] },
+    ],
+  },
+
+  {
+    slug:        "how-to-claim-jupiter-lock-tokens",
+    title:       "How to Claim Jupiter Lock Tokens on Solana (2026)",
+    excerpt:     "Jupiter Lock never pushes unlocked tokens to your wallet; the recipient has to claim them at lock.jup.ag. Here's how to claim, why a lock might not show up, and what happens if you never claim.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "4 min read",
+    category:    "Guides",
+    tags:        ["Jupiter Lock", "jup lock", "Solana vesting", "how to claim", "claim vesting"],
+    content: [
+      { type: "callout", emoji: "🪐", title: "The short version", body: "Go to lock.jup.ag, connect the wallet named as the lock's recipient, open the lock and submit a claim. Claimed tokens move from the lock's escrow into your wallet. Nothing is sent automatically, and unclaimed tokens never expire." },
+      { type: "p", html: `<strong>Jupiter Lock</strong> is the Solana token locker built by Jupiter, used for team, investor and community allocations. Each lock is an escrow with a cliff and a periodic release; for how schedules are built, see <a href="/resources/what-is-jupiter-lock-solana-token-vesting">what Jupiter Lock is</a>.` },
+
+      { type: "h2", text: "How to claim from Jupiter Lock" },
+      { type: "p", html: `These steps follow <a href="https://docs.jup.ag/user-docs/launch/lock/how-it-works" rel="nofollow">Jupiter's own documentation</a>.` },
+      { type: "ol", items: [
+        `Open <a href="https://lock.jup.ag" rel="nofollow">lock.jup.ag</a>.`,
+        "Connect the wallet that is set as the lock's <strong>recipient</strong>.",
+        "Find the lock in the list of locks for your wallet. It shows how much has vested and is available to claim.",
+        "Submit the claim transaction and approve it in your wallet. You pay only a standard Solana network fee.",
+        "The claimed tokens move from the escrow into your wallet.",
+      ] },
+
+      { type: "h2", text: "If a lock doesn't show up" },
+      { type: "ul", items: [
+        "<strong>Different wallet.</strong> Locks are tied to one recipient address. Check every wallet you might have given the project.",
+        "<strong>Recipient was changed.</strong> If the creator allowed it when setting up the lock, the recipient can be changed, so the lock may now belong to another address.",
+        "<strong>Cancelled lock.</strong> A creator can only cancel if they enabled that permission at creation. Those permissions can't be changed afterwards, and by default neither is enabled.",
+      ] },
+
+      { type: "h2", text: "What happens if you never claim" },
+      { type: "p", html: `Nothing is lost by waiting. Jupiter's docs state there is no expiry on the right to claim, so unclaimed tokens stay in the escrow indefinitely. Most recipients do claim: in <a href="/research/unclaimed-vesting">Vestream's study of finished vesting schedules</a>, about 97% of finished Jupiter Lock escrows had been fully claimed. But roughly 11,500 hadn't, and the largest was worth about $55,000 and had sat unclaimed for 21 months.` },
+
+      { type: "h2", text: "Find every Jupiter Lock you hold" },
+      { type: "p", html: `If you've received allocations from several projects, paste your Solana wallet into <a href="/find-vestings">Vestream's free wallet scan</a>. It reads Jupiter Lock alongside Streamflow, Smithii and the EVM vesting protocols, and shows what's claimable now and when the next period lands. You claim on lock.jup.ag; Vestream finds the positions and can alert you before each one unlocks. Upcoming Jupiter Lock releases are listed on the <a href="/protocols/jupiter-lock">Jupiter Lock unlock tracker</a>.` },
+
+      { type: "h2", text: "Jupiter Lock claim FAQ" },
+      { type: "faq", items: [
+        { q: "Are Jupiter Lock tokens sent to me automatically?", a: "No. Unlocked tokens stay in the lock's escrow until the recipient claims them at lock.jup.ag." },
+        { q: "Does it cost anything to claim from Jupiter Lock?", a: "Only the standard Solana network fee for the claim transaction." },
+        { q: "Do unclaimed Jupiter Lock tokens expire?", a: "No. Jupiter's documentation says there is no expiration on the right to claim, so tokens can be claimed at any time after they unlock." },
+        { q: "What if my wallet was compromised?", a: "There's no built-in recovery. The only options are the recipient-change or cancel permissions, and only if the lock's creator enabled them when the lock was made." },
+      ] },
+    ],
+  },
+
+  {
+    slug:        "how-to-claim-unvest-vested-tokens",
+    title:       "How to Claim Vested Tokens on Unvest (2026)",
+    excerpt:     "Unvest holds your allocation as a vesting token that releases over time, but you still have to claim it. Here's how to claim from the Unvest investor dashboard, what it costs, and how to find a round you've forgotten.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "4 min read",
+    category:    "Guides",
+    tags:        ["Unvest", "unvest claim", "vesting token", "how to claim", "claim vesting"],
+    content: [
+      { type: "callout", emoji: "🧾", title: "The short version", body: "Open the project's Unvest investor dashboard (or find it at app.unvest.io/projects), connect your wallet on the right chain, open Claim Token, pick the vesting round and click Claim. The unlocked tokens are sent to your wallet." },
+      { type: "p", html: `<strong>Unvest</strong> wraps each allocation in a <strong>vesting token</strong>: an ERC-20 that represents your locked balance and converts into the real token as it vests. Because it's a token, an allocation can move between wallets. How it works is covered in <a href="/resources/what-is-unvest-token-vesting">what Unvest is</a>.` },
+
+      { type: "h2", text: "How to claim on Unvest" },
+      { type: "p", html: `These steps follow <a href="https://docs.unvest.io/tutorials/investor-dashboard/claiming-tokens" rel="nofollow">Unvest's claiming guide</a>.` },
+      { type: "ol", items: [
+        `Open the project's investor dashboard from the link the project shared, or find the project at <a href="https://app.unvest.io/projects" rel="nofollow">app.unvest.io/projects</a>.`,
+        "Connect your wallet and switch to the chain the round is on.",
+        "Click the <strong>Claim Token</strong> panel on the left.",
+        "Choose the vesting round you want to claim from.",
+        "If tokens are available, a <strong>Claim</strong> button appears at the top. Click it and approve the transaction.",
+        "Once it confirms, the tokens are in your wallet.",
+      ] },
+
+      { type: "h2", text: "What claiming costs" },
+      { type: "p", html: `Since Unvest v3, a claim carries a small protocol fee calculated as a share of the transaction's gas cost, on top of the gas itself. Claims aren't subject to the transfer fee. Moving still-locked vesting tokens to another wallet is different: Unvest deducts 2.5% from each transfer, unless the project has set it to zero. Details are in <a href="https://docs.unvest.io/features/token-vesting/wrapped-token-transfer-fee" rel="nofollow">Unvest's fee docs</a>.` },
+
+      { type: "h2", text: "If there's nothing to claim" },
+      { type: "ul", items: [
+        "<strong>Wrong chain or round.</strong> Unvest runs on several chains, and one project can have several rounds.",
+        "<strong>The allocation moved.</strong> Vesting tokens are transferable, so the balance may now sit in another wallet you control.",
+        "<strong>Too early.</strong> Nothing is claimable before the round's first release.",
+      ] },
+
+      { type: "h2", text: "Find forgotten Unvest allocations" },
+      { type: "p", html: `Unvest allocations are among the most often forgotten: in <a href="/research/unclaimed-vesting">Vestream's study of finished vesting schedules</a>, 87% of finished Unvest positions still held unclaimed tokens, many of them small airdrop allocations. Paste your wallet into <a href="/find-vestings">Vestream's free wallet scan</a> to see every Unvest position across Ethereum, BNB Chain, Polygon and Base, with what's claimable now. You claim on Unvest; Vestream finds the rounds for you. Upcoming releases are on the <a href="/protocols/unvest">Unvest unlock tracker</a>.` },
+
+      { type: "h2", text: "Unvest claim FAQ" },
+      { type: "faq", items: [
+        { q: "Do Unvest tokens unlock automatically into my wallet?", a: "No. You claim from the project's Unvest investor dashboard, and the unlocked tokens are sent to your wallet once the transaction confirms." },
+        { q: "Is there a fee to claim on Unvest?", a: "From Unvest v3, claims carry a small protocol fee calculated from the transaction's gas cost, plus the gas itself. Claims aren't charged the 2.5% transfer fee." },
+        { q: "Can I sell or transfer Unvest vesting tokens before they unlock?", a: "Yes, vesting tokens are transferable, and Unvest deducts 2.5% from each transfer unless the project has set that fee to zero." },
+      ] },
+    ],
+  },
+
+  {
+    slug:        "how-to-claim-hedgey-vesting-tokens",
+    title:       "How to Claim Hedgey Vesting and Lockup Tokens (2026)",
+    excerpt:     "A Hedgey grant is an NFT in your wallet, and the tokens behind it only move when you claim. Here's how to claim a Hedgey grant step by step, including from a Safe, and why a grant might not appear.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "5 min read",
+    category:    "Guides",
+    tags:        ["Hedgey", "hedgey claim", "hedgey redeem", "vesting NFT", "how to claim"],
+    content: [
+      { type: "callout", emoji: "🎟️", title: "The short version", body: "Open app.hedgey.finance, click Token Grants, connect your wallet, find the grant under Received Grants, click View Details, then Claim. Claiming releases everything that has vested so far. Whoever holds the plan NFT is the one who can claim." },
+      { type: "p", html: `<strong>Hedgey</strong> represents each vesting or lockup plan as an <strong>NFT</strong>. The NFT points to the schedule held in Hedgey's contract, and whoever holds it can claim. On-chain the claim is called <em>redeeming</em> a plan. For the full model, see <a href="/resources/hedgey-nft-vesting-plans-explained">how Hedgey NFT vesting plans work</a>.` },
+
+      { type: "h2", text: "How to claim a Hedgey grant" },
+      { type: "p", html: `These steps follow Hedgey's recipient walkthrough, as published in the <a href="https://discuss.ens.domains/t/managing-your-governance-distribution-guide/20135" rel="nofollow">ENS distribution guide</a>.` },
+      { type: "ol", items: [
+        `Open the <a href="https://app.hedgey.finance" rel="nofollow">Hedgey app</a> and click <strong>Token Grants</strong> in the left-hand panel.`,
+        "Click <strong>Connect Wallet</strong> and choose the wallet that holds the grant.",
+        "Find your grant under <strong>Received Grants</strong> and click <strong>View Details</strong>.",
+        "Click <strong>Claim</strong> and confirm the transaction in your wallet.",
+      ] },
+      { type: "p", html: "Claiming releases everything that has vested at that moment. Anything still vesting stays in the plan and can be claimed later." },
+
+      { type: "h2", text: "Claiming from a Safe" },
+      { type: "p", html: "If the grant is held by a Safe multisig, click <strong>View on Safe</strong> instead. The Hedgey grants app has to be added to your Safe as a custom app first, and the claim then goes through your Safe's normal signing flow." },
+
+      { type: "h2", text: "Why a grant might not appear" },
+      { type: "ul", items: [
+        "<strong>The NFT moved.</strong> Plans are transferable NFTs. If the NFT was sent to another wallet, that wallet now claims.",
+        "<strong>Wrong chain.</strong> Hedgey deploys the same contracts on many chains. Switch network in the app.",
+        "<strong>It was revoked.</strong> On revocable vesting plans, the granting project can revoke. What had already vested stays yours to claim; the unvested remainder returns to the project.",
+        "<strong>It's fully claimed.</strong> When a plan is completely redeemed, its NFT is burned, so it no longer appears.",
+      ] },
+
+      { type: "h2", text: "Unclaimed Hedgey grants are common" },
+      { type: "p", html: `In <a href="/research/unclaimed-vesting">Vestream's study of finished vesting schedules</a>, about 4 in 10 finished Hedgey plans still held unclaimed tokens, and more than 8 in 10 of those had never been claimed at all. Counting only tokens that still trade, that was about $2.3M across 1,080 plans. If you've had grants from DAOs or projects, it's worth checking.` },
+      { type: "p", html: `Paste any wallet into <a href="/find-vestings">Vestream's free wallet scan</a> to see every Hedgey plan it holds across Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism and Berachain, with what's claimable now. You claim in the Hedgey app; Vestream finds the plans and can alert you before the next unlock. Upcoming releases are on the <a href="/protocols/hedgey">Hedgey unlock tracker</a>.` },
+
+      { type: "h2", text: "Hedgey claim FAQ" },
+      { type: "faq", items: [
+        { q: "What's the difference between claiming and redeeming on Hedgey?", a: "They're the same thing. The app calls it claiming; the contract function is called redeeming a plan." },
+        { q: "Does claiming a Hedgey grant end my vesting?", a: "No. Claiming releases only what has vested so far. The rest keeps vesting and can be claimed later." },
+        { q: "Can I delegate the votes on a Hedgey grant?", a: "Yes, for governance tokens. Open the grant, click Delegate and enter the wallet that should vote. You keep the tokens; only the voting power moves." },
+        { q: "Why did my Hedgey NFT disappear?", a: "Either it was transferred to another wallet, or the plan was fully redeemed, which burns the NFT." },
+      ] },
+    ],
+  },
+
+  {
+    slug:        "how-to-withdraw-hoodlock-tokens",
+    title:       "How to Withdraw Tokens from a HoodLock Lock on Robinhood Chain (2026)",
+    excerpt:     "A HoodLock lock doesn't return your tokens on its own when it expires; the owner has to withdraw. Here's how to withdraw an expired HoodLock lock, how HoodLock vesting claims work, and what it costs.",
+    publishedAt: "2026-10-17",
+    updatedAt:   "2026-10-17",
+    readingTime: "4 min read",
+    category:    "Guides",
+    tags:        ["HoodLock", "Robinhood Chain", "token lock", "how to withdraw", "claim vesting"],
+    content: [
+      { type: "callout", emoji: "🏹", title: "The short version", body: "Open HoodLock's My locks page with the wallet that owns the lock. An expired lock shows as Unlocked; withdraw it in one transaction and the full amount returns to your wallet. There's no withdrawal fee, only gas." },
+      { type: "p", html: `<strong>HoodLock</strong> is a token locker on Robinhood Chain. A lock holds a token until one unlock time, then releases the whole amount at once; HoodLock also offers linear vesting schedules. For background, see <a href="/resources/what-is-hoodlock-robinhood-chain-token-locker">what HoodLock is</a>.` },
+
+      { type: "h2", text: "How to withdraw an expired HoodLock lock" },
+      { type: "p", html: `These steps follow <a href="https://hoodlock.tech/docs/when-a-lock-expires" rel="nofollow">HoodLock's own documentation</a>.` },
+      { type: "ol", items: [
+        `Open <strong>My locks</strong> in the <a href="https://hoodlock.tech/app/locks" rel="nofollow">HoodLock app</a>, connected with the wallet that owns the lock.`,
+        "Find the expired lock. It shows as <strong>Unlocked</strong>.",
+        "Withdraw it and confirm the transaction. It takes one transaction, and the full amount returns to the owner wallet.",
+      ] },
+      { type: "ul", items: [
+        "<strong>Who can withdraw:</strong> the lock's current owner. If ownership was transferred, the new owner withdraws, not the original creator.",
+        "<strong>When:</strong> as soon as the unlock time passes. There's no grace period and no deadline.",
+        "<strong>Cost:</strong> network gas only. HoodLock charges no withdrawal fee.",
+        "<strong>Unlock dates only move later.</strong> A lock can be extended, never shortened, so the date shown is the earliest you can withdraw.",
+      ] },
+
+      { type: "h2", text: "HoodLock vesting: claiming as it releases" },
+      { type: "p", html: `HoodLock vesting schedules release linearly between a start and an end date, after an optional cliff. Nothing is paid out automatically: the beneficiary sends a claim transaction whenever they choose, and unclaimed amounts keep accumulating with no expiry. HoodLock charges no fee on claims, and no HoodLock function can cancel or edit a schedule once it's created. One risk to know about: if the token itself can pause transfers or blacklist addresses, the token's owner could block a claim, and HoodLock can't override that. Source: <a href="https://hoodlock.tech/docs/token-vesting" rel="nofollow">HoodLock's vesting docs</a>.` },
+
+      { type: "h2", text: "Track HoodLock unlocks" },
+      { type: "p", html: `Paste a wallet into <a href="/find-vestings">Vestream's free wallet scan</a> to see its HoodLock locks on Robinhood Chain alongside every other vesting it holds, with the unlock date for each. You withdraw on HoodLock; Vestream finds the locks and can alert you before each one opens. Upcoming HoodLock unlocks across every token are on the <a href="/protocols/hoodlock">HoodLock unlock tracker</a>.` },
+
+      { type: "h2", text: "HoodLock withdrawal FAQ" },
+      { type: "faq", items: [
+        { q: "Does HoodLock return tokens automatically when a lock expires?", a: "No. Tokens stay in the contract until the lock's owner sends a withdraw transaction. They can stay there indefinitely." },
+        { q: "Is there a fee to withdraw from HoodLock?", a: "No. HoodLock charges one flat fee when a lock is created; withdrawals cost only network gas." },
+        { q: "Can a HoodLock lock be unlocked early?", a: "No. Unlock dates can only be extended, never brought forward." },
+        { q: "Who can withdraw a HoodLock lock?", a: "Only the current owner of the lock. If ownership was transferred, it's the new owner." },
+      ] },
+    ],
+  },
+
+
   // ── SEO article: Team Finance vesting (targets "team finance vesting" +
   //    "how to track team finance vesting") — neutral, helps TF recipients ──────
   {
