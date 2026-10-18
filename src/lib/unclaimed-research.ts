@@ -203,3 +203,19 @@ export const UNCLAIMED_FULL_CENSUS_TOTAL = UNCLAIMED_SUMMARY
 /** Estimated finished population of the sampled protocols. */
 export const UNCLAIMED_SAMPLED_EST_TOTAL = UNCLAIMED_SUMMARY
   .filter((r) => r.method === "Random sample").reduce((s, r) => s + (r.finishedEst ?? 0), 0);
+
+/**
+ * Superfluid: the same protocol paying the same kind of schedule two ways.
+ * Automatic schedules are pushed (an automation starts them; tokens never
+ * leave the payer until then). Claim-based schedules (VestingScheduler v2+,
+ * `claimValidityDate != 0`) wait for the recipient, and can never start after
+ * that date. Not part of the table above: automatic schedules have no
+ * "finished and waiting" state. Source: scripts/research-superfluid-completion.mjs
+ * against Superfluid's own vesting-scheduler subgraphs on 8 chains.
+ */
+export const SUPERFLUID_COMPLETION = {
+  measured:        "2026-10-18",
+  automatic:       { finished: 2_422, started: 2_294, neverStarted: 128 },
+  claimBased:      { finished: 1_310, claimed: 860, unclaimed: 450, pastDeadline: 216 },
+  chains:          "Ethereum, Base, Optimism, Polygon, Arbitrum, BNB Chain, Gnosis, Avalanche",
+} as const;

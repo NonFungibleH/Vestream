@@ -19,6 +19,7 @@ import {
   UNCLAIMED_SUMMARY,
   UNCLAIMED_FULL_CENSUS_TOTAL,
   UNCLAIMED_SAMPLED_EST_TOTAL,
+  SUPERFLUID_COMPLETION,
 } from "@/lib/unclaimed-research";
 
 const URL_ = "https://www.vestream.io/research/unclaimed-vesting";
@@ -58,6 +59,7 @@ export default function UnclaimedVestingResearch() {
       { "@type": "Organization", name: "Vestream", url: "https://www.vestream.io" },
     ],
     datePublished: "2026-10-16",
+    dateModified: "2026-10-18",
     temporalCoverage: "2026-10-06/2026-10-09",
     measurementTechnique: "Direct on-chain reads of vesting contracts and programs; full census for six protocols, seeded random samples of 6,000 for two Solana protocols.",
     variableMeasured: ["Finished vesting schedules", "Unclaimed share of finished schedules", "Never-claimed share of unclaimed schedules", "Unclaimed value in tokens with at least $10k liquidity"],
@@ -102,7 +104,7 @@ export default function UnclaimedVestingResearch() {
           {[
             { v: fmt(UNCLAIMED_FULL_CENSUS_TOTAL), l: "finished schedules read individually, on six protocols" },
             { v: `~${fmt(UNCLAIMED_SAMPLED_EST_TOTAL)}`, l: "more estimated from random samples on two Solana protocols" },
-            { v: `${usd(valueLow)}–${usd(valueHigh)}`, l: "unclaimed in tokens that still trade, across the six valued protocols" },
+            { v: `Up to ${usd(valueHigh)}`, l: `unclaimed in tokens that still trade, across the six valued protocols (${usd(valueLow)} on the strictest valuation)` },
           ].map((k) => (
             <div key={k.l} className="rounded-2xl p-5" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}>
               <div className="text-2xl font-bold" style={{ color: "#0F8A8A", letterSpacing: "-0.02em" }}>{k.v}</div>
@@ -113,10 +115,11 @@ export default function UnclaimedVestingResearch() {
 
         <h2 className={h2}>Key findings</h2>
         <ol className="list-decimal pl-5 mb-10 space-y-3 text-base leading-relaxed">
-          <li><strong>Unclaimed tokens are common.</strong> The share of finished schedules still holding tokens ranges from 2.9% on Jupiter Lock to 87% on Unvest. On Sablier, the largest protocol measured, it is about 1 in 3 once a single airdrop is excluded.</li>
-          <li><strong>People claim everything or nothing.</strong> Across every protocol, between 78% and 97% of unclaimed schedules were never claimed once. Partial claimers are rare, and on Streamflow 148 of 150 of them made their last claim before the schedule ended.</li>
-          <li><strong>Most of it is worth nothing, but not all of it.</strong> 87% of unclaimed Sablier streams are in tokens that no longer trade anywhere. At the other end, some unclaimed positions are worth six figures, and some have sat untouched for more than two years.</li>
+          <li><strong>Unclaimed tokens are common.</strong> The share of finished schedules still holding tokens ranges from 2.9% on Jupiter Lock to 87% on Unvest. On Sablier, the largest protocol measured, it is about 1 in 3 once a single airdrop is excluded. Rates are highest where airdrops dominate, and many airdrop recipients may never know the tokens are there.</li>
+          <li><strong>People claim everything or nothing.</strong> Nearly 9 in 10 unclaimed schedules (between 78% and 97%, depending on the protocol) were never claimed once. Partial claimers are rare, and on Streamflow 148 of 150 of them made their last claim before the schedule ended.</li>
+          <li><strong>Most of it is worth nothing, but not all of it.</strong> 87% of unclaimed Sablier streams are in tokens that no longer have a market. At the other end, a Hedgey plan worth about $152,000, in a token with a market deep enough to sell it, finished 15 months before measurement and was never touched, and an ARB grant worth about $27,000 had sat untouched for more than two years.</li>
           <li><strong>Headline figures are easily distorted.</strong> One airdrop was 61% of all unclaimed Sablier streams, and single team or treasury lockups were worth millions. Every figure below states what was excluded and why.</li>
+          <li><strong>Push completes; pull often doesn&rsquo;t.</strong> On Superfluid, which can pay the same kind of schedule either way, {Math.round(100 * SUPERFLUID_COMPLETION.automatic.started / SUPERFLUID_COMPLETION.automatic.finished)}% of automatic schedules started as designed, while a third of claim-based ones ({fmt(SUPERFLUID_COMPLETION.claimBased.unclaimed)} of {fmt(SUPERFLUID_COMPLETION.claimBased.finished)}) were never claimed. See <a href="#superfluid" className="underline" style={{ color: "#0F8A8A" }}>below</a>.</li>
           <li><strong>Third-party data often disagrees with the chain.</strong> One protocol&rsquo;s index kept 2,628 locks as unclaimed after they had been moved and emptied on-chain; another disagreed with the chain on 17.5% of contracts. Every figure here was checked against the contracts.</li>
         </ol>
 
@@ -163,6 +166,44 @@ export default function UnclaimedVestingResearch() {
           <a href="/research/unclaimed-vesting/data.csv" className="underline" style={{ color: "#0F8A8A" }}>Download the table as CSV</a>.
         </p>
 
+        <h2 id="superfluid" className={h2}>Superfluid: the same payment, pushed or pulled</h2>
+        <p className={p}>
+          Superfluid&rsquo;s vesting scheduler can pay a schedule automatically, keeping the tokens in the payer&rsquo;s wallet
+          until an automation service starts the stream, or it can ask the recipient to claim, with a deadline after which the
+          schedule can never start. Because both run on the same protocol, they show how much the payment model alone changes
+          the outcome.
+        </p>
+        <div className="overflow-x-auto mb-3 rounded-2xl" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}>
+          <table className="w-full text-sm" style={{ fontVariantNumeric: "tabular-nums", minWidth: 560 }}>
+            <thead>
+              <tr style={{ color: "#5C6066", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+                {["Schedule type", "Finished", "Completed the first step", "Never completed"].map((h) => (
+                  <th key={h} className="text-left font-semibold px-4 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+                <td className="px-4 py-3 font-semibold">Automatic (push)</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.automatic.finished)}</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.automatic.started)} started ({(100 * SUPERFLUID_COMPLETION.automatic.started / SUPERFLUID_COMPLETION.automatic.finished).toFixed(1)}%)</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.automatic.neverStarted)} never started</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold">Claim-based (pull)</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.claimBased.finished)}</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.claimBased.claimed)} claimed ({(100 * SUPERFLUID_COMPLETION.claimBased.claimed / SUPERFLUID_COMPLETION.claimBased.finished).toFixed(1)}%)</td>
+                <td className="px-4 py-3">{fmt(SUPERFLUID_COMPLETION.claimBased.unclaimed)} never claimed, {fmt(SUPERFLUID_COMPLETION.claimBased.pastDeadline)} already past their deadline</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs mb-10" style={{ color: "#8B8E92" }}>
+          Measured {SUPERFLUID_COMPLETION.measured} from Superfluid&rsquo;s own vesting-scheduler indexes on {SUPERFLUID_COMPLETION.chains}.
+          Finished means the schedule&rsquo;s end date was more than 30 days before measurement. On a schedule past its claim
+          deadline the tokens never left the payer&rsquo;s wallet, so nothing is left for the recipient to collect.
+        </p>
+
         <h2 className={h2}>How it was measured</h2>
         <ul className="list-disc pl-5 mb-6 space-y-2 text-base leading-relaxed">
           <li><strong>Coverage varies by protocol.</strong> Sablier was measured through Sablier&rsquo;s own indexer, which covers every chain it is deployed on (25 EVM chains, more than Vestream itself tracks); the chains outside Vestream&rsquo;s coverage hold under 2% of Sablier&rsquo;s finished streams. The other protocols run on between one and six chains each, including Solana. Each protocol&rsquo;s chains are listed in the table.</li>
@@ -176,10 +217,10 @@ export default function UnclaimedVestingResearch() {
 
         <h2 className={h2}>Limitations</h2>
         <ul className="list-disc pl-5 mb-10 space-y-2 text-base leading-relaxed">
-          <li>Not every vesting protocol can be measured this way. Magna only reveals an allocation once it is claimed, and streaming payroll protocols (Superfluid, LlamaPay, Sablier Flow) have no &ldquo;finished and waiting&rdquo; state. They are not included.</li>
+          <li>Not every vesting protocol can be measured this way. Magna only reveals an allocation once it is claimed, and streaming payroll protocols (LlamaPay, Sablier Flow) have no &ldquo;finished and waiting&rdquo; state, so they are not included. Superfluid is reported separately above, because only its claim-based schedules can be left waiting.</li>
           <li>PinkSale is being measured and will be added when complete.</li>
           <li>Two protocols are sampled rather than censused; their rates carry the confidence intervals shown.</li>
-          <li>&ldquo;Unclaimed&rdquo; does not always mean forgotten. Some recipients may be choosing not to claim, for example when a position is worth less than the fee to claim it.</li>
+          <li>&ldquo;Unclaimed&rdquo; does not always mean forgotten. Some recipients may be choosing not to claim, for example when a position is worth less than the fee to claim it. Others may never have known an airdrop existed, or may have lost access to the wallet.</li>
           <li>This is a snapshot. Claims made after measurement are not reflected.</li>
         </ul>
 
