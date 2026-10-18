@@ -35,7 +35,7 @@ const articles: Article[] = [
     title:       "What Happens to Unclaimed Vested Tokens? (2026)",
     excerpt:     "Unclaimed vested tokens stay in the vesting contract until the recipient claims them. They don't arrive automatically, they don't usually expire, and on-chain data shows a lot of them are never collected. Here's what happens to them, and how to check whether you have any.",
     publishedAt: "2026-10-17",
-    updatedAt:   "2026-10-17",
+    updatedAt:   "2026-10-18",
     readingTime: "5 min read",
     category:    "Research",
     tags:        ["unclaimed tokens", "unclaimed vesting", "token unlock", "how to claim", "vesting research"],
@@ -65,7 +65,7 @@ const articles: Article[] = [
       { type: "p", html: "These rates say more about how each platform is used than about the platform. Protocols that carry many airdrops and small community distributions show higher rates than those used mainly for team and investor grants." },
 
       { type: "h2", text: "Do unclaimed vested tokens expire?" },
-      { type: "p", html: `Usually not. Jupiter Lock's documentation says there is no expiration on the right to claim, and HoodLock's says unclaimed vesting never lapses. On PinkSale vesting locks, unclaimed cycles simply accumulate. Unless a specific programme sets its own claim deadline, unlocked tokens stay claimable indefinitely. That's also why they get forgotten: there's no reminder and no consequence for waiting.` },
+      { type: "p", html: `Usually not. Jupiter Lock's documentation says there is no expiration on the right to claim, and HoodLock's says unclaimed vesting never lapses. On PinkSale vesting locks, unclaimed cycles simply accumulate. The exception is Superfluid: when a payer sets a schedule up to be claimed rather than paid automatically, it carries a claim deadline, and once that passes the claim can no longer be made. Elsewhere, unless a programme sets its own deadline, unlocked tokens stay claimable indefinitely. That's also why they get forgotten: there's no reminder and no consequence for waiting.` },
 
       { type: "h2", text: "Can the project take them back?" },
       { type: "p", html: "Only in limited cases, and normally not what has already vested. Some schedules are revocable or cancellable, but only if the project enabled that when it created them. On revocable Hedgey plans, revoking returns the <em>unvested</em> remainder to the project while what had already vested stays claimable by the recipient. Many vesting deployments switch cancellation off entirely." },
@@ -87,10 +87,10 @@ const articles: Article[] = [
 
       { type: "h2", text: "Unclaimed vested tokens FAQ" },
       { type: "faq", items: [
-        { q: "What happens to unclaimed vested tokens?", a: "They stay in the vesting contract, still owed to the recipient, until the recipient claims them. Most platforms don't send unlocked tokens automatically and don't set an expiry." },
+        { q: "What happens to unclaimed vested tokens?", a: "They stay in the vesting contract, still owed to the recipient, until the recipient claims them. Most platforms don't send unlocked tokens automatically and don't set an expiry; Superfluid's claim-based schedules are an exception, with a deadline set by the payer." },
         { q: "Do vested tokens go to my wallet automatically?", a: "On most crypto vesting platforms, no. An unlock makes tokens claimable, and you have to claim them with a transaction from the recipient wallet." },
         { q: "How much vested crypto goes unclaimed?", a: "In Vestream's October 2026 study of about 1.28 million finished vesting schedules across eight protocols, nearly 9 in 10 unclaimed schedules had never been claimed even once, and up to $9.5M was still unclaimed in tokens that still trade." },
-        { q: "Can I still claim tokens that unlocked years ago?", a: "Usually yes. Unless the programme set its own deadline, unlocked tokens stay claimable. Whether they are still worth anything depends on whether the token still has a market." },
+        { q: "Can I still claim tokens that unlocked years ago?", a: "Usually yes. Unless the programme set a deadline (Superfluid's claim-based schedules have one), unlocked tokens stay claimable. Whether they are still worth anything depends on whether the token still has a market." },
         { q: "Do I pay tax on vested tokens I haven't claimed?", a: "Possibly. In the UK the vesting date is usually the taxable point for employee share awards, and HMRC's closest guidance for tokens points the same way, although there's no definitive rule. Check with a tax adviser." },
       ] },
     ],
