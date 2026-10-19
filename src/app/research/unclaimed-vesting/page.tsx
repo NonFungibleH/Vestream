@@ -119,7 +119,7 @@ export default function UnclaimedVestingResearch() {
           <li><strong>People claim everything or nothing.</strong> Nearly 9 in 10 unclaimed schedules (between 78% and 97%, depending on the protocol) were never claimed once. Partial claimers are rare, and on Streamflow 148 of 150 of them made their last claim before the schedule ended.</li>
           <li><strong>Most of it is worth nothing, but not all of it.</strong> 87% of unclaimed Sablier streams are in tokens that no longer have a market. At the other end, a Hedgey plan worth about $152,000, in a token with a market deep enough to sell it, finished 15 months before measurement and was never touched, and an ARB grant worth about $27,000 had sat untouched for more than two years.</li>
           <li><strong>Headline figures are easily distorted.</strong> One airdrop was 61% of all unclaimed Sablier streams, and single team or treasury lockups were worth millions. Every figure below states what was excluded and why.</li>
-          <li><strong>Push completes; pull often doesn&rsquo;t.</strong> On Superfluid, which can pay the same kind of schedule either way, {Math.round(100 * SUPERFLUID_COMPLETION.automatic.started / SUPERFLUID_COMPLETION.automatic.finished)}% of automatic schedules started as designed, while a third of claim-based ones ({fmt(SUPERFLUID_COMPLETION.claimBased.unclaimed)} of {fmt(SUPERFLUID_COMPLETION.claimBased.finished)}) were never claimed. See <a href="#superfluid" className="underline" style={{ color: "#0F8A8A" }}>below</a>.</li>
+          <li><strong>Push completes; pull often doesn&rsquo;t.</strong> On Superfluid, which supports both, {Math.round(100 * SUPERFLUID_COMPLETION.automatic.started / SUPERFLUID_COMPLETION.automatic.finished)}% of automatic schedules started as designed, while a third of claim-based ones ({fmt(SUPERFLUID_COMPLETION.claimBased.unclaimed)} of {fmt(SUPERFLUID_COMPLETION.claimBased.finished)}) were never claimed, though the two groups come from different payers. See <a href="#superfluid" className="underline" style={{ color: "#0F8A8A" }}>below</a>.</li>
           <li><strong>Third-party data often disagrees with the chain.</strong> One protocol&rsquo;s index kept 2,628 locks as unclaimed after they had been moved and emptied on-chain; another disagreed with the chain on 17.5% of contracts. Every figure here was checked against the contracts.</li>
         </ol>
 
@@ -170,8 +170,9 @@ export default function UnclaimedVestingResearch() {
         <p className={p}>
           Superfluid&rsquo;s vesting scheduler can pay a schedule automatically, keeping the tokens in the payer&rsquo;s wallet
           until an automation service starts the stream, or it can ask the recipient to claim, with a deadline after which the
-          schedule can never start. Because both run on the same protocol, they show how much the payment model alone changes
-          the outcome.
+          schedule can never start. It isn&rsquo;t a controlled comparison: almost all claim-based schedules (99%) come from 16 payers
+          on Optimism, while automatic ones come from about 130 payers across eight chains. But the gap is large, and it points
+          the same way as everything else in this study.
         </p>
         <div className="overflow-x-auto mb-3 rounded-2xl" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)" }}>
           <table className="w-full text-sm" style={{ fontVariantNumeric: "tabular-nums", minWidth: 560 }}>
