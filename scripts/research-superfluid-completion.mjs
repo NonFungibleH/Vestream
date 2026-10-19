@@ -27,7 +27,7 @@ async function q(chain, query) {
   return j.data;
 }
 
-const tot = { autoFinished: 0, autoStarted: 0, autoNeverStarted: 0, autoNeverStartedNotDeleted: 0, finished: 0, started: 0, neverStarted: 0, failed: 0, deleted: 0, claimBased: 0, claimed: 0, claimExpired: 0, neverStartedNotDeleted: 0 };
+const tot = { ncAuto: 0, ncAutoStarted: 0, ncClaim: 0, ncClaimed: 0, ncClaimPast: 0, autoFinished: 0, autoStarted: 0, autoNeverStarted: 0, autoNeverStartedNotDeleted: 0, finished: 0, started: 0, neverStarted: 0, failed: 0, deleted: 0, claimBased: 0, claimed: 0, claimExpired: 0, neverStartedNotDeleted: 0 };
 for (const chain of CHAINS) {
   let last = "", rows = [];
   try {
@@ -40,7 +40,7 @@ for (const chain of CHAINS) {
       last = page[page.length - 1].id;
     }
   } catch (e) { console.log(`skip ${e.message}`); continue; }
-  const c = { autoFinished: 0, autoStarted: 0, autoNeverStarted: 0, autoNeverStartedNotDeleted: 0, finished: rows.length, started: 0, neverStarted: 0, failed: 0, deleted: 0, claimBased: 0, claimed: 0, claimExpired: 0, neverStartedNotDeleted: 0 };
+  const c = { ncAuto: 0, ncAutoStarted: 0, ncClaim: 0, ncClaimed: 0, ncClaimPast: 0, autoFinished: 0, autoStarted: 0, autoNeverStarted: 0, autoNeverStartedNotDeleted: 0, finished: rows.length, started: 0, neverStarted: 0, failed: 0, deleted: 0, claimBased: 0, claimed: 0, claimExpired: 0, neverStartedNotDeleted: 0 };
   for (const s of rows) {
     const started = s.cliffAndFlowExecutedAt != null;
     if (started) c.started++; else c.neverStarted++;
@@ -48,6 +48,11 @@ for (const chain of CHAINS) {
     if (s.failedAt != null) c.failed++;
     if (s.deletedAt != null) c.deleted++;
     const cv = Number(s.claimValidityDate ?? 0);
+    // Excluding schedules the payer cancelled (deletedAt), which say nothing about the recipient.
+    if (s.deletedAt == null) {
+      if (cv === 0) { c.ncAuto++; if (started) c.ncAutoStarted++; }
+      else { c.ncClaim++; if (s.claimedAt != null) c.ncClaimed++; else if (cv < now) c.ncClaimPast++; }
+    }
     if (cv === 0) {
       c.autoFinished++;
       if (started) c.autoStarted++; else { c.autoNeverStarted++; if (s.deletedAt == null) c.autoNeverStartedNotDeleted++; }
@@ -62,5 +67,6 @@ for (const chain of CHAINS) {
   for (const k of Object.keys(tot)) tot[k] += c[k];
 }
 console.log("TOTAL", JSON.stringify(tot));
+console.log(`EXCLUDING CANCELLED: automatic ${tot.ncAutoStarted}/${tot.ncAuto} started (${(100*tot.ncAutoStarted/tot.ncAuto).toFixed(1)}%); claim-based ${tot.ncClaim - tot.ncClaimed}/${tot.ncClaim} never claimed (${(100*(tot.ncClaim-tot.ncClaimed)/tot.ncClaim).toFixed(1)}%), ${tot.ncClaimPast} past deadline`);
 console.log(`AUTOMATIC (push): ${tot.autoFinished} finished, ${tot.autoStarted} started (${(100*tot.autoStarted/tot.autoFinished).toFixed(1)}%), ${tot.autoNeverStarted} never started, of which ${tot.autoNeverStartedNotDeleted} were not cancelled`);
 console.log(`ALL: started ${(100 * tot.started / tot.finished).toFixed(1)}% | never started (not cancelled) ${tot.neverStartedNotDeleted} | claim-based unclaimed ${tot.claimBased - tot.claimed} of ${tot.claimBased} (${tot.claimExpired} past their claim deadline)`);

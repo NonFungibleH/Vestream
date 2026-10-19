@@ -215,7 +215,9 @@ export const UNCLAIMED_SAMPLED_EST_TOTAL = UNCLAIMED_SUMMARY
  */
 export const SUPERFLUID_COMPLETION = {
   measured:        "2026-10-18",
-  automatic:       { finished: 2_422, started: 2_294, neverStarted: 128 },
-  claimBased:      { finished: 1_310, claimed: 860, unclaimed: 450, pastDeadline: 216 },
+  // Schedules the payer cancelled are excluded from both groups: they say
+  // nothing about whether a recipient would have collected.
+  automatic:       { finished: 2_301, started: 2_226, neverStarted: 75 },
+  claimBased:      { finished: 1_174, claimed: 848, unclaimed: 326, pastDeadline: 205 },
   chains:          "Ethereum, Base, Optimism, Polygon, Arbitrum, BNB Chain, Gnosis, Avalanche",
 } as const;
