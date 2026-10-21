@@ -251,7 +251,7 @@ async function dexScreenerBatch(addresses: string[]): Promise<Map<string, PriceI
   try {
     const url = `https://api.dexscreener.com/latest/dex/tokens/${addresses.join(",")}`;
     const res = await fetchWithRetry(url, {
-      next: { revalidate: 60 },
+      next: { revalidate: 1800 },
       headers: { Accept: "application/json" },
     }, { tag: "dexscreener-tvl", retries: 2 });
     if (!res || !res.ok) return out;
@@ -364,7 +364,7 @@ async function defiLlamaBatch(
     const keys = addresses.map((a) => `${chain}:${a}`).join(",");
     const url  = `https://coins.llama.fi/prices/current/${keys}`;
     const res  = await fetchWithRetry(url, {
-      next: { revalidate: 300 },
+      next: { revalidate: 1800 },
       headers: { Accept: "application/json" },
     }, { tag: "defillama-tvl", retries: 1 });
     if (!res || !res.ok) return out;
@@ -444,7 +444,7 @@ async function coinGeckoBatch(
               + `?contract_addresses=${addresses.join(",")}`
               + `&vs_currencies=usd`;
     const res = await fetchWithRetry(url, {
-      next: { revalidate: 300 },
+      next: { revalidate: 1800 },
       headers: { Accept: "application/json" },
     }, { tag: "coingecko-tvl", retries: 1 });
     if (!res || !res.ok) return out;

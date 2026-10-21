@@ -81,7 +81,10 @@ import { loadTokenPageData, EMPTY_MARKET } from "@/lib/vesting/token-page-data";
 import { listSitemapTokens } from "@/lib/sitemap-token-cache";
 import { totalSupplyWhole } from "@/lib/vesting/token-supply";
 
-export const revalidate = 1800;
+// 6h (Oct 2026, was 30 min): ~10k token pages are crawlable and each
+// regeneration is a full DB + DexScreener render. Unlock schedules change
+// rarely; the market fetches inside are 6h too, so this is the real interval.
+export const revalidate = 21600;
 // Search Console reported these as "Server error (5xx)". Same trap as /unlocks:
 // Vercel's default function duration also governs ISR REGENERATION, and this
 // page's fan-out (4 DB queries + a DexScreener price fetch) can exceed it on a

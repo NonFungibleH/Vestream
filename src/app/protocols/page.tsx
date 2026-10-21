@@ -82,7 +82,7 @@ import {
 // Net: cold /protocols render drops from ~10-15s to ~1-2s; warm render
 // (Data Cache hit) is ~50-100ms – and with ISR, no visitor ever waits on
 // either: renders happen in the background revalidation, off the user path.
-export const revalidate = 300;
+export const revalidate = 3600;
 // Vercel's default function duration governs ISR regeneration too; without
 // this, a slow render is killed and the stale/empty prerender (or a 5xx) is
 // served instead. See the token page for the Search Console fallout.

@@ -726,7 +726,7 @@ Migrated protocols are kept in `SEED_JOBS` in parallel during cutover so cache b
 **Adding a new indexer:**
 1. Implement the `Indexer` interface in `src/lib/vesting/indexer/<protocol>.ts` (see `uncx-vm.ts` for the reference shape — `genesisBlock`, `maxBlocksPerScan`, `reorgLag`, `scanWindow(client, from, to)`).
 2. Register it in `src/lib/vesting/indexer/index.ts` (`INDEXERS` array).
-3. Add a `vercel.json` cron entry per chain: `/api/cron/indexer?protocol=X&chainId=Y` on `*/30 * * * *`.
+3. Add a `vercel.json` cron entry per chain: `/api/cron/indexer?protocol=X&chainId=Y`, **once a day** (e.g. `NN 5 * * *`, staggered). Indexers moved hourly → daily on 2026-10-21 to cut the Vercel bill; each tick scans up to 240s (`SCAN_BUDGET_MS`) so it can cover a day of blocks. Don't add sub-daily indexer crons without a reason that beats the cost.
 4. No route changes — the cron route is generic and dispatches via `findIndexer()`.
 
 **State persistence:** the `indexer_state` table tracks `lastScannedBlock` / `lastConfirmedBlock` per `(protocol, chainId)`. Each tick resumes from `lastConfirmedBlock + 1`. A 12-block reorg lag re-scans the trailing window; `writeToCache`'s `setWhere` clause makes the upserts idempotent.
@@ -1174,7 +1174,7 @@ publicnode fallback that `bec6fc9` had explicitly warned against).
      prerender ships WITH data, persists good renders via `after()`, and
      serves last-good on a degraded read. `/token/[chainId]/[address]`
      prerenders the whole sitemap token list from those rows
-     (`generateStaticParams`), and the 15-min `warm` cron recomputes them in
+     (`generateStaticParams`), and the hourly `warm` cron recomputes them in
      rotating slices (`computeTokenSlice`) so the bake is never stale. Seed a
      new page's rows before its first deploy or the first build bakes empty.
    - **`BSC_RPC_URL` / `POLYGON_RPC_URL` / `ALCHEMY_RPC_URL_BASE` are

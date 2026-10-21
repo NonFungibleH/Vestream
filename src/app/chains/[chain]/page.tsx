@@ -22,7 +22,7 @@ import {
 import { getChainStats, type ChainUnlock } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   const live = publicChainIds()

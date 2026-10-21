@@ -17,6 +17,9 @@ import { getTokenOverview, getTokenMarketData } from "@/lib/vesting/token-aggreg
 import { getProtocol } from "@/lib/protocol-constants";
 
 export const runtime     = "nodejs";
+// Daily: share cards were regenerating on the page's interval with a second
+// full DB + DexScreener load each time, and crawlers fetch them per token.
+export const revalidate  = 86400;
 export const size        = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

@@ -34,13 +34,14 @@ const HOME_GUIDES = HOME_GUIDE_SLUGS
   .filter((a): a is NonNullable<ReturnType<typeof getArticle>> => !!a);
 
 
-// ISR – re-render at most once every 10 minutes. Bumped 60→600 on
+// ISR – re-render at most once an hour. Bumped 60→600 on
 // 2026-05-10 as part of the egress-reduction pass after Supabase Free
 // hit 244% of its 5 GB/month quota. Homepage live stats (total streams,
 // last-indexed timestamp) move on minute-to-hour scale; serving a 10-min-
 // old snapshot to the next visitor saves five DB aggregations per stale
-// minute without any visible UX impact.
-export const revalidate = 600;
+// minute without any visible UX impact. 600→3600 on 2026-10-21 to cut the
+// Vercel bill; the seed/TVL crons still revalidate the data tags on change.
+export const revalidate = 3600;
 // Vercel's default function duration governs ISR regeneration too; without
 // this, a slow render is killed and the stale/empty prerender (or a 5xx) is
 // served instead. See the token page for the Search Console fallout.

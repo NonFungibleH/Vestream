@@ -36,8 +36,8 @@ import { DOC_SLUGS } from "@/lib/docs";
 
 const SITE = "https://www.vestream.io";
 
-// Regenerate every 10 min so per-protocol lastmod stays fresh after deploys.
-export const revalidate = 600;
+// Regenerate hourly so per-protocol lastmod stays fresh after deploys.
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Date-only "today" (midnight UTC) — stable within a day, so daily data pages

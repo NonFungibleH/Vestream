@@ -25,10 +25,10 @@ import { findIndexer, runIndexer } from "@/lib/vesting/indexer";
 import { env } from "@/lib/env";
 import { bearerEquals } from "@/lib/auth/timing-safe-bearer";
 
-// Indexer ticks are fast (single window, single multicall, ~few hundred
-// streams max). 60s is generous; most runs complete in <5s. We don't need
-// the full 300s budget the seed-cache route requires.
-export const maxDuration = 60;
+// Every indexer ticks once a day (Oct 2026, to cut the Vercel bill), so a
+// tick may need to catch up a full day of blocks: see SCAN_BUDGET_MS in
+// runner.ts. A caught-up tick still completes in a few seconds.
+export const maxDuration = 300;
 export const dynamic     = "force-dynamic";
 
 async function handle(req: NextRequest) {

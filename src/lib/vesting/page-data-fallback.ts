@@ -127,7 +127,7 @@ function writeFallbackDb<T>(key: string, value: T): Promise<void> {
  * that export `revalidate`, and which would flip an ISR render dynamic.
  * This read runs on the page render path (failure branch + build-phase
  * bake), so it goes through a plain GET against the Upstash REST API with
- * `next.revalidate` — ISR- and build-compatible. 60s of fetch-cache
+ * `next.revalidate` — ISR- and build-compatible. An hour of fetch-cache
  * staleness is irrelevant for a value whose whole job is "up to 7 days
  * stale beats empty".
  */
@@ -138,7 +138,7 @@ async function readFallbackRedis<T>(key: string): Promise<T | null> {
   try {
     const res = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
       headers: { Authorization: `Bearer ${token}` },
-      next:    { revalidate: 60 },
+      next:    { revalidate: 3600 },
     });
     if (!res.ok) return null;
     // REST shape: { result: string | null }. The SDK JSON-serialises

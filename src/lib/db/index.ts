@@ -34,8 +34,11 @@ import { env } from "@/lib/env";
 const IS_TXN_POOLER = env.DATABASE_URL.includes(":6543/");
 
 const client = postgres(env.DATABASE_URL, {
-  // Single connection per lambda — Supabase handles pooling upstream.
-  max: 1,
+  // Three per instance, not one: Fluid compute runs many requests
+  // concurrently inside one instance, so `max: 1` queued every query in it
+  // behind a single connection and the waiting was billed as provisioned
+  // memory (Oct 2026 bill). Supavisor still does the real pooling upstream.
+  max: 3,
   // Disable prepared statements when talking to the PgBouncer transaction
   // pooler; otherwise every query errors.
   prepare: !IS_TXN_POOLER,

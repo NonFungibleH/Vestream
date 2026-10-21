@@ -9,7 +9,7 @@ import { chainSlug, chainBrand, chainIcon, listProtocols, getProtocol } from "@/
 import { getChainsOverview, getUpcomingUnlocksAcrossChains } from "@/lib/vesting/chain-stats";
 import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 // Vercel's default function duration is short (~15s) unless a route raises it,
 // and it applies to ISR REGENERATION too. This page's data work runs well past

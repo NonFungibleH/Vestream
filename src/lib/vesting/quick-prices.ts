@@ -150,7 +150,7 @@ const priceKey = (chainId: number, address: string) => `${chainId}:${address.toL
  * fetch executes inside a route that exports `revalidate`. ISR pages are
  * already cached at the route level (plus usually unstable_cache around
  * the caller), so they don't need the cross-lambda Redis layer — only
- * the DexScreener fetch, which uses `next: { revalidate: 60 }` and is
+ * the DexScreener fetch, which uses `next: { revalidate: 1800 }` and is
  * ISR-safe. Route handlers (/api/*) keep the default redis: true.
  */
 export async function getQuickUsdPrices(
@@ -257,7 +257,7 @@ export async function getQuickUsdPrices(
     try {
       const url = `https://api.dexscreener.com/latest/dex/tokens/${batch.join(",")}`;
       const res = await fetchWithRetry(url, {
-        next:    { revalidate: 60 },
+        next:    { revalidate: 1800 },
         headers: { Accept: "application/json" },
       }, { tag: "dexscreener-quick", retries: 1, timeoutMs: 4000 });
       if (!res || !res.ok) return null;

@@ -45,7 +45,7 @@ const readSnapshotsCached = unstable_cache(
     return rows;
   },
   ["chain-stats:all-snapshots:v1"],
-  { revalidate: 300 },
+  { revalidate: 1800 },
 );
 
 export async function loadSnapshots(): Promise<ProtocolSnapshotRow[]> {

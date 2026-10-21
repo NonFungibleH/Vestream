@@ -815,7 +815,7 @@ export async function getUpcomingUnlockGroupsAcross(
 const getUpcomingUnlockGroupsAcrossCached = unstable_cache(
   async (limit: number) => getUpcomingUnlockGroupsAcrossUncached(limit),
   ["upcoming-unlock-groups-across-v1"],
-  { revalidate: 60, tags: ["upcoming-unlocks"] },
+  { revalidate: 1800, tags: ["upcoming-unlocks"] },
 );
 
 async function getUpcomingUnlockGroupsAcrossUncached(

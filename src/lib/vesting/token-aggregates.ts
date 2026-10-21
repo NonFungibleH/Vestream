@@ -702,7 +702,7 @@ async function enrichSocialsFromCoinGecko(
       + `?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`;
     const res = await fetchWithRetry(
       url,
-      { next: { revalidate: 3600 }, headers: { Accept: "application/json" } },
+      { next: { revalidate: 86400 }, headers: { Accept: "application/json" } },
       { tag: "coingecko-socials", retries: 1, timeoutMs: 4000 },
     );
     if (!res || !res.ok) return existing;
@@ -782,7 +782,7 @@ export async function getTokenMarketData(
   try {
     const res = await fetchWithRetry(
       `https://api.dexscreener.com/latest/dex/tokens/${normaliseAddress(tokenAddress)}`,
-      { next: { revalidate: 300 }, headers: { Accept: "application/json" } },
+      { next: { revalidate: 21600 }, headers: { Accept: "application/json" } },
       // retries:1 + a 3s per-attempt cap. This is a RENDER-PATH enrichment
       // call: the default (retries:2, no timeoutMs → 8s × 3 = 24s worst
       // case) could hang the token page. Price/FDV is nice-to-have; the
@@ -851,7 +851,7 @@ export async function getTokenMarketData(
   // whole token-page render) to 5-6s for low-liquidity tokens. Cap the
   // BLOCKING wait at 1.5s via Promise.race: if CG is slow, render with the
   // DexScreener socials we already have. The CG fetch keeps running and
-  // warms Next's fetch cache (revalidate:3600), so the next ISR
+  // warms Next's fetch cache (revalidate:86400), so the next ISR
   // revalidation picks up any extra socials for free. Not an AbortSignal —
   // that would poison Next's data cache (see fetch-with-retry.ts).
   const socials = await Promise.race([

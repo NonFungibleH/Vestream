@@ -86,7 +86,7 @@ import { normaliseAddress } from "@/lib/address-validation";
 // problem that tempted us to drop it is solved differently: the loader
 // THROWS during the build phase, and the page's catch path bakes the
 // Redis last-good payload (ISR-safe raw fetch) instead of dashes.
-export const revalidate = 300;
+export const revalidate = 3600;
 
 // The cold render runs 4 live cache aggregations + a DexScreener pricing call
 // and takes 4–13s for the heaviest protocols (uncx/hedgey). Without a raised

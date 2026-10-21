@@ -76,7 +76,7 @@ async function queryGraph<T>(url: string, query: string, variables: Record<strin
       method:  "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body:    JSON.stringify({ query, variables }),
-      next:    { revalidate: 300 },
+      next:    { revalidate: 1800 },
     });
     if (!res.ok) return null;
     const json = (await res.json()) as { data?: T; errors?: unknown };

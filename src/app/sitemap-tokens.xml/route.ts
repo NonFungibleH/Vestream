@@ -19,7 +19,7 @@ const SITE = "https://www.vestream.io";
 
 // 10-min ISR: the token list returns empty during build (no DB), so a short
 // window lets the first runtime hit repopulate the real URLs quickly.
-export const revalidate = 600;
+export const revalidate = 3600;
 
 type TokenRow = { chainId: number; address: string };
 
@@ -102,7 +102,7 @@ ${urls}
   return new Response(xml, {
     headers: {
       "Content-Type":  "application/xml; charset=utf-8",
-      "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600",
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

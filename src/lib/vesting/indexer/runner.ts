@@ -150,10 +150,13 @@ export async function runIndexer(indexer: Indexer): Promise<RunResult> {
   };
 }
 
-// Leave headroom under the indexer route's 60s maxDuration for the final
+// Leave headroom under the indexer route's 300s maxDuration for the final
 // state commit + response. Each window is bounded (a few RPC calls), so the
-// overshoot past this line is small.
-const SCAN_BUDGET_MS = 45_000;
+// overshoot past this line is small. 240s (was 45s, Oct 2026): every indexer
+// now ticks once a day, and one tick must cover a full day of blocks — on
+// Arbitrum that is ~345k blocks, ~170 windows of 2,000. A caught-up tick
+// still exits as soon as it reaches the head.
+const SCAN_BUDGET_MS = 240_000;
 
 /** Persist the new confirmed tip. Called after every successful window. */
 async function commitState(protocol: string, chainId: number, toBlock: bigint, eventCount: number): Promise<void> {

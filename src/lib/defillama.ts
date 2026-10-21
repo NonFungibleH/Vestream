@@ -21,7 +21,7 @@
 //     compromise between freshness and fetch cost.
 //   - Fetch is shared by all concurrent callers via an in-flight promise
 //     so a burst of 8 getProtocolsTvl calls still trigger a single HTTP.
-//   - `next.revalidate: 300` on the fetch so Vercel's shared data cache
+//   - `next.revalidate: 3600` on the fetch so Vercel's shared data cache
 //     can serve repeat requests across serverless instances (response
 //     exceeds 2MB so Next logs a warning but doesn't break).
 //
@@ -67,7 +67,7 @@ async function loadAllProtocols(): Promise<AllProtocolsCache> {
   inFlight = (async () => {
     try {
       const res = await fetch(API_URL, {
-        next:    { revalidate: 300 },
+        next:    { revalidate: 3600 },
         headers: { Accept: "application/json" },
       });
       if (!res.ok) {

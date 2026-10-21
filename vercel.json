@@ -5,7 +5,7 @@
   "crons": [
     {
       "path": "/api/cron/warm",
-      "schedule": "*/15 * * * *"
+      "schedule": "5 * * * *"
     },
     {
       "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=1,43114,10",
@@ -133,35 +133,35 @@
     },
     {
       "path": "/api/cron/indexer?protocol=doppler&chainId=8453",
-      "schedule": "7 * * * *"
+      "schedule": "7 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler&chainId=1",
-      "schedule": "37 * * * *"
+      "schedule": "37 6 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler&chainId=42161",
-      "schedule": "22 * * * *"
+      "schedule": "22 7 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler&chainId=4663",
-      "schedule": "52 * * * *"
+      "schedule": "52 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler-fees&chainId=8453",
-      "schedule": "12 * * * *"
+      "schedule": "12 6 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler-fees&chainId=1",
-      "schedule": "42 * * * *"
+      "schedule": "42 7 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler-fees&chainId=42161",
-      "schedule": "27 * * * *"
+      "schedule": "27 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=doppler-fees&chainId=4663",
-      "schedule": "57 * * * *"
+      "schedule": "57 6 * * *"
     },
     {
       "path": "/api/cron/seed-cache?group=subgraphs",
@@ -205,31 +205,31 @@
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=1",
-      "schedule": "3 * * * *"
+      "schedule": "3 7 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=8453",
-      "schedule": "11 * * * *"
+      "schedule": "11 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=56",
-      "schedule": "19 * * * *"
+      "schedule": "19 6 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=137",
-      "schedule": "27 * * * *"
+      "schedule": "27 7 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=42161",
-      "schedule": "35 * * * *"
+      "schedule": "35 5 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=10",
-      "schedule": "43 * * * *"
+      "schedule": "43 6 * * *"
     },
     {
       "path": "/api/cron/indexer?protocol=magna&chainId=43114",
-      "schedule": "51 * * * *"
+      "schedule": "51 7 * * *"
     },
     {
       "path": "/api/cron/tvl-snapshot?protocol=sablier&chainId=324,81457,80094",

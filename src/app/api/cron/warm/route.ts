@@ -70,22 +70,31 @@ export async function GET(req: NextRequest) {
   // contends on the DB pool + DexScreener pricing — it spiked the two biggest
   // pages to 5–6s and would momentarily slow any real visitor mid-burst.
   // One-at-a-time keeps each render's cost isolated and the site smooth.
+  //
+  // Bounded (Oct 2026): this cron used to wait 12s on every STALE page and
+  // re-fetch it, with no per-page limit. With the DB slow, every run hit the
+  // 300s ceiling — ~8h/day of billed function time spent waiting. A STALE hit
+  // already starts the regeneration, and every page bakes from its last-good
+  // row, so one pass is enough. Each page gets PAGE_TIMEOUT_MS; the whole page
+  // pass stops at PAGES_BUDGET_MS so the token slice always gets its turn.
   const warmed: Array<{ url: string; status?: number; ms?: number; error?: string }> = [];
+  const pagesStarted = Date.now();
   for (const url of urls) {
+    if (Date.now() - pagesStarted > PAGES_BUDGET_MS) {
+      warmed.push({ url, error: "skipped: page budget spent" });
+      continue;
+    }
     const started = Date.now();
     try {
       // no-store on OUR fetch so the warmer never serves itself a cached
       // response — the page still renders server-side and repopulates its own
-      // unstable_cache Data Cache.
-      let res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
-      // Under stale-while-revalidate a STALE hit returns instantly and warms
-      // nothing: the regeneration it kicked off finishes after we have already
-      // moved on, so the next real visitor still gets the stale payload. Wait
-      // for it, then re-fetch so the fresh render is actually in cache.
-      if (res.headers.get("x-vercel-cache") === "STALE") {
-        await new Promise((r) => setTimeout(r, 12_000));
-        res = await fetch(url, { cache: "no-store", headers: { "x-vestream-warm": "1" } });
-      }
+      // unstable_cache Data Cache. (AbortSignal is safe here: no-store means
+      // there is no data-cache entry for it to disable.)
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: { "x-vestream-warm": "1" },
+        signal: AbortSignal.timeout(PAGE_TIMEOUT_MS),
+      });
       warmed.push({ url, status: res.status, ms: Date.now() - started });
     } catch (err) {
       warmed.push({ url, error: String(err).slice(0, 120) });
@@ -96,11 +105,12 @@ export async function GET(req: NextRequest) {
   // ── Token page precompute, one rotating slice per tick ────────────────────
   // The sitemap's ~260 token pages are prerendered at build from their
   // page_fallback rows (see generateStaticParams on the token page). This is
-  // what keeps those rows fresh with no extra cron: every 15-minute tick
+  // what keeps those rows fresh with no extra cron: every hourly tick
   // computes the next TOKEN_SLICE tokens' payloads (data only — no page
   // render, no HTTP) and awaits the upsert, so the whole list turns over
-  // roughly every two hours. Bounded so it can never push this function past
-  // its budget; a slow slice just finishes on a later tick.
+  // roughly every ten hours (the pages themselves refresh daily). Bounded so
+  // it can never push this function past its budget; a slow slice just
+  // finishes on a later tick.
   const tokens = await computeTokenSlice();
 
   return NextResponse.json({ ok: true, count: warmed.length, slow, warmed, tokens });
@@ -115,6 +125,11 @@ function reportMonths(): string[] {
   return out;
 }
 
+const PAGE_TIMEOUT_MS   = 20_000;
+const PAGES_BUDGET_MS   = 150_000;
+// Must match the cron interval in vercel.json: the slice rotation below
+// advances one slice per tick, and a mismatched tick length skips slices.
+const TICK_MS           = 60 * 60_000;
 const TOKEN_SLICE       = 30;
 const TOKEN_CONCURRENCY = 3;
 const TOKEN_BUDGET_MS   = 90_000;
@@ -124,8 +139,8 @@ async function computeTokenSlice(): Promise<{ slice: number; of: number; compute
   const all = await listSitemapTokens();
   if (all.length === 0) return { slice: 0, of: 0, computed: 0, failed: 0, ms: 0 };
   const slices = Math.ceil(all.length / TOKEN_SLICE);
-  // Tick-indexed rotation: successive 15-minute ticks walk the list in order.
-  const slice = Math.floor(Date.now() / (15 * 60_000)) % slices;
+  // Tick-indexed rotation: successive hourly ticks walk the list in order.
+  const slice = Math.floor(Date.now() / TICK_MS) % slices;
   const batch = all.slice(slice * TOKEN_SLICE, (slice + 1) * TOKEN_SLICE);
 
   let computed = 0, failed = 0, i = 0;
