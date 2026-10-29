@@ -380,6 +380,56 @@ export async function readCachedSolanaMintMeta(): Promise<Map<string, { symbol: 
   return out;
 }
 
+// ─── Streamflow: drop rows for streams that closed ───────────────────────────
+
+/**
+ * Delete Streamflow cache rows whose stream is no longer open on chain.
+ *
+ * A Streamflow stream closes when it is fully withdrawn or cancelled; after
+ * that nothing is locked or claimable, and the adapter never returns it. But
+ * the cache kept its last snapshot, so a closed stream could sit there
+ * forever as "active" with tokens locked (4,163 such rows on 2026-10-29).
+ * The program scan sees every open stream, so anything absent from it closed.
+ *
+ * Guards, because a short scan would otherwise delete live data:
+ *   - only rows first seen BEFORE the scan started (a stream opened since and
+ *     written by a live wallet lookup isn't in the scan's set);
+ *   - refuses outright if it would delete more than MAX_PRUNE_SHARE of the
+ *     protocol's rows in one run (the backlog was ~10%; daily churn is far
+ *     less), which is what a truncated or partial scan would look like.
+ */
+const MAX_PRUNE_SHARE = 0.15;
+
+export async function pruneClosedStreamflowRows(
+  openStreamIds: string[],
+  scanStartedAt: Date,
+): Promise<{ deleted: number; refused?: string }> {
+  if (openStreamIds.length === 0) return { deleted: 0, refused: "empty open set" };
+  const open = JSON.stringify(openStreamIds);
+  // Raw sql params must be strings — postgres.js rejects a JS Date here.
+  const before = scanStartedAt.toISOString();
+  const [counts] = (await db.execute(sql`
+    WITH open_ids AS (SELECT jsonb_array_elements_text(${open}::jsonb) AS id)
+    SELECT
+      (SELECT count(*)::int FROM vesting_streams_cache WHERE protocol = 'streamflow' AND chain_id = 101) AS total,
+      (SELECT count(*)::int FROM vesting_streams_cache c
+        WHERE c.protocol = 'streamflow' AND c.chain_id = 101 AND c.first_seen_at < ${before}::timestamptz
+          AND NOT EXISTS (SELECT 1 FROM open_ids o WHERE o.id = c.stream_id)) AS closed
+  `)) as unknown as { total: number; closed: number }[];
+  if (counts.closed === 0) return { deleted: 0 };
+  if (counts.closed > counts.total * MAX_PRUNE_SHARE) {
+    return { deleted: 0, refused: `would delete ${counts.closed} of ${counts.total} rows (> ${MAX_PRUNE_SHARE * 100}%)` };
+  }
+  const deleted = (await db.execute(sql`
+    WITH open_ids AS (SELECT jsonb_array_elements_text(${open}::jsonb) AS id)
+    DELETE FROM vesting_streams_cache c
+    WHERE c.protocol = 'streamflow' AND c.chain_id = 101 AND c.first_seen_at < ${before}::timestamptz
+      AND NOT EXISTS (SELECT 1 FROM open_ids o WHERE o.id = c.stream_id)
+    RETURNING 1
+  `)) as unknown as unknown[];
+  return { deleted: deleted.length };
+}
+
 // ─── Stats (for future admin / data layer endpoints) ──────────────────────────
 
 /** Returns the total number of indexed streams in the cache */

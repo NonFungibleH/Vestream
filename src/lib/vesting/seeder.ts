@@ -708,7 +708,7 @@ import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pink
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
 import { fetchAllSmithiiSchedules }  from "./adapters/smithii";
 import { fetchAllStreamflowStreams } from "./adapters/streamflow";
-import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes, readCachedSolanaMintMeta } from "./dbcache";
+import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes, readCachedSolanaMintMeta, pruneClosedStreamflowRows } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
@@ -1711,13 +1711,31 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   // stream already decoded. discoverStreamflowRecipients stays for the
   // seed-diagnostic route only.
   if (job.adapterId === "streamflow") {
-    return runSolanaBulkFetch(job, async () => {
+    const scanStartedAt = new Date();
+    let openStreamIds: string[] | null = null;
+    const result = await runSolanaBulkFetch(job, async () => {
       const known = await readCachedSolanaMintMeta().catch((err) => {
         console.error(`[seeder:streamflow] cached mint metadata read failed, resolving all from chain:`, err);
         return undefined;
       });
-      return fetchAllStreamflowStreams(known);
+      const scanned = await fetchAllStreamflowStreams(known);
+      if (!scanned) return null;
+      openStreamIds = scanned.openStreamIds;
+      return scanned.streams;
     });
+    // Drop rows for streams that closed since they were cached — only after
+    // a scan that came back AND wrote cleanly (see pruneClosedStreamflowRows).
+    if (openStreamIds && result.batchWriteErrors === 0 && !result.error) {
+      try {
+        const pruned = await pruneClosedStreamflowRows(openStreamIds, scanStartedAt);
+        console.log(pruned.refused
+          ? `[seeder:streamflow/101] prune REFUSED: ${pruned.refused}`
+          : `[seeder:streamflow/101] pruned ${pruned.deleted} rows for closed streams`);
+      } catch (err) {
+        console.error("[seeder:streamflow/101] prune failed:", err);
+      }
+    }
+    return result;
   }
 
   let recipients: string[];

@@ -274,13 +274,15 @@ export async function scanOpenStreamflowContracts(
 }
 
 /**
- * Seeder entry point: every open Streamflow stream as a VestingStream.
+ * Seeder entry point: every open Streamflow stream as a VestingStream, plus
+ * the cache ids of EVERY open stream the scan saw (including any skipped for
+ * unreadable decimals), so the caller can drop rows for streams that closed.
  * Returns null when Solana is disabled or no RPC would serve the scan.
  */
 export async function fetchAllStreamflowStreams(
   /** Mint metadata the caller already has (the seeder passes the cache's). */
   knownMeta?: Map<string, { symbol: string; decimals: number }>,
-): Promise<VestingStream[] | null> {
+): Promise<{ streams: VestingStream[]; openStreamIds: string[] } | null> {
   if (process.env.SOLANA_ENABLED !== "true") return null;
 
   const urls = [...new Set([
@@ -338,7 +340,10 @@ export async function fetchAllStreamflowStreams(
     out.push(toVestingStream(c.id, c.stream, m, nowSec));
   }
   if (skipped > 0) console.warn(`[streamflow] ${skipped} streams skipped: mint decimals unreadable this run`);
-  return out;
+  return {
+    streams:       out,
+    openStreamIds: contracts.map((c) => `streamflow-${CHAIN_IDS.SOLANA}-${c.id}`),
+  };
 }
 
 // ─── Per-wallet fetch ────────────────────────────────────────────────────────
