@@ -294,7 +294,14 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
           // caught up — surfacing as "1.62M unknown" in the upcoming queue while
           // the token page (which reads streamData) showed the real symbol. This
           // COALESCE keeps the better of the two so the gap can't regrow.
-          tokenSymbol:     sql`COALESCE(NULLIF(NULLIF(excluded.token_symbol, 'unknown'), ''), ${vestingStreamsCache.tokenSymbol})`,
+          // Solana adapters fall back to a truncated mint ("CARD…") when no
+          // symbol resolves; that is a placeholder too, so it never replaces
+          // a stored symbol either (but still fills a NULL).
+          tokenSymbol:     sql`CASE
+            WHEN excluded.token_symbol IS NULL OR excluded.token_symbol IN ('unknown', '') OR excluded.token_symbol LIKE '%…'
+              THEN COALESCE(${vestingStreamsCache.tokenSymbol}, NULLIF(NULLIF(excluded.token_symbol, 'unknown'), ''))
+            ELSE excluded.token_symbol
+          END`,
           // end_time was insert-only, so the column froze at whatever the
           // schedule said when the row was FIRST seen while stream_data moved
           // on beneath it (2026-10-06 audit: nearly every sablier-flow and
@@ -334,6 +341,43 @@ export async function writeToCache(streams: VestingStream[]): Promise<number> {
     console.error("[vesting-cache] write failed:", err);
     return 0;
   }
+}
+
+// ─── Solana mint metadata already in the cache ───────────────────────────────
+
+/**
+ * Symbol + decimals per Solana mint, taken from cached rows that carry a real
+ * symbol. A mint's decimals and symbol don't change, so the Streamflow bulk
+ * seed reuses these instead of re-reading ~17k mints from chain every run and
+ * only resolves mints it hasn't seen. Rows with a placeholder symbol (a
+ * truncated mint, 'unknown', '???') are skipped so those mints get re-resolved.
+ */
+export async function readCachedSolanaMintMeta(): Promise<Map<string, { symbol: string; decimals: number }>> {
+  // Pick one row per mint from the narrow columns first, then read
+  // stream_data for the winners only. Filtering on stream_data directly
+  // detoasted every Solana row and took ~53s, a fifth of the seed budget.
+  // Streamflow rows only: their decimals were always read from chain.
+  const rows = (await db.execute(sql`
+    WITH pick AS (
+      SELECT DISTINCT ON (token_address) token_address, token_symbol, stream_id
+      FROM vesting_streams_cache
+      WHERE protocol = 'streamflow'
+        AND chain_id = 101
+        AND token_symbol IS NOT NULL
+        AND token_symbol NOT IN ('', 'unknown', 'UNKNOWN', '???')
+        AND token_symbol NOT LIKE '%…'
+      ORDER BY token_address, last_refreshed_at DESC
+    )
+    SELECT p.token_address                              AS mint,
+           p.token_symbol                               AS symbol,
+           (c.stream_data->>'tokenDecimals')::int       AS decimals
+    FROM pick p JOIN vesting_streams_cache c ON c.stream_id = p.stream_id
+  `)) as unknown as { mint: string; symbol: string; decimals: number | null }[];
+  const out = new Map<string, { symbol: string; decimals: number }>();
+  for (const r of rows) {
+    if (r.decimals != null) out.set(r.mint, { symbol: r.symbol, decimals: r.decimals });
+  }
+  return out;
 }
 
 // ─── Stats (for future admin / data layer endpoints) ──────────────────────────

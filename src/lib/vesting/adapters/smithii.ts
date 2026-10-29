@@ -58,7 +58,7 @@ import {
 import { Connection, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { mapBounded, getSolanaRpcUrls } from "../rpc";
-import { getJupiterTokenList } from "./jupiter-lock";
+import { resolveSolanaMintMeta, solanaSymbolFallback } from "../solana-token-meta";
 
 export const SMITHII_PROGRAM_ID = "vesFcnNXtfS9JMtspbe9SkMJiRiSPwsywuWMjYwxQ2K";
 
@@ -171,26 +171,6 @@ async function readVaultBalances(
   return out;
 }
 
-/** Mint decimals read straight off the mint account, batched.
- *  SPL Mint layout: mint_authority COption<Pubkey>(36) supply u64(8) → u8 @44.
- *  Read on-chain rather than from the Jupiter list so UNLISTED tokens — most of
- *  what a vesting tool locks — still get correct decimals. */
-async function readMintDecimals(conn: Connection, mints: string[]): Promise<Map<string, number>> {
-  const out = new Map<string, number>();
-  const chunks: string[][] = [];
-  for (let i = 0; i < mints.length; i += MULTI_ACCOUNT_CHUNK) {
-    chunks.push(mints.slice(i, i + MULTI_ACCOUNT_CHUNK));
-  }
-  await mapBounded(chunks, SOLANA_CONCURRENCY, async (chunk) => {
-    const infos = await conn.getMultipleAccountsInfo(chunk.map((m) => new PublicKey(m)));
-    chunk.forEach((m, i) => {
-      const info = infos[i];
-      if (info && info.data.length > 44) out.set(m, info.data[44]);
-    });
-  }, SOLANA_BATCH_DELAY_MS);
-  return out;
-}
-
 /** Decoded schedule + live vault balance → the canonical VestingStream. */
 export function toVestingStream(
   s: DecodedSmithiiSchedule,
@@ -257,18 +237,19 @@ async function hydrate(
   schedules: DecodedSmithiiSchedule[],
 ): Promise<VestingStream[]> {
   const mints = [...new Set(schedules.map((s) => s.tokenMint))];
-  const [vaults, decimalsByMint, jupiter] = await Promise.all([
+  const [vaults, mintMeta] = await Promise.all([
     readVaultBalances(conn, schedules),
-    readMintDecimals(conn, mints),
-    getJupiterTokenList(),
+    // Symbols from chain (Metaplex / Token-2022) — the Jupiter verified list
+    // left 2,052 of 2,076 rows with a truncated-mint symbol.
+    resolveSolanaMintMeta(conn, mints),
   ]);
 
   const nowSec = Math.floor(Date.now() / 1000);
   return schedules.map((s) => {
-    const listed = jupiter.get(s.tokenMint);
+    const m = mintMeta.get(s.tokenMint);
     const meta = {
-      symbol:   listed?.symbol ?? `${s.tokenMint.slice(0, 4)}…`,
-      decimals: decimalsByMint.get(s.tokenMint) ?? listed?.decimals ?? 9,
+      symbol:   m?.symbol   ?? solanaSymbolFallback(s.tokenMint),
+      decimals: m?.decimals ?? 9,
     };
     return toVestingStream(s, vaults.get(s.schedulePubkey), meta, nowSec);
   });

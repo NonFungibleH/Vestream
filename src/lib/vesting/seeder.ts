@@ -707,7 +707,8 @@ import { discoverPinkSaleOwners, fetchPinkSaleAllLocks } from "./tvl-walker/pink
 import { locksToVestingStreams as pinksaleLocksToStreams } from "./adapters/pinksale";
 import { fetchAllJupiterLockEscrows } from "./adapters/jupiter-lock";
 import { fetchAllSmithiiSchedules }  from "./adapters/smithii";
-import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes } from "./dbcache";
+import { fetchAllStreamflowStreams } from "./adapters/streamflow";
+import { getCachedRecipients, bumpSeedHeartbeat, recordSeederAttempt, readSeederAttemptTimes, readCachedSolanaMintMeta } from "./dbcache";
 
 export async function discoverPinksaleRecipients(chainId: SupportedChainId, limit: number): Promise<string[]> {
   const tag = `pinksale/${chainId}`;
@@ -1560,7 +1561,7 @@ async function runPinkSaleViaWalker(job: SeedJob): Promise<SeedRunResult> {
   // doesn't cost us the whole walk.
   let streamsWritten   = 0;
   let batchWriteErrors = 0;
-  for (const batch of chunk(streams, BATCH_SIZE)) {
+  for (const batch of chunk(streams, SOLANA_BULK_WRITE_BATCH)) {
     const written = await writeToCache(batch);
     if (written === 0) {
       batchWriteErrors++;
@@ -1607,6 +1608,12 @@ async function runJupiterLockViaBulkFetch(job: SeedJob): Promise<SeedRunResult> 
  * overran the 300s budget. Parameterised rather than copied so a fix to the
  * write/heartbeat handling lands on both.
  */
+// Bulk Solana scans return tens of thousands of rows (Streamflow ~39k, Jupiter
+// Lock up to 50k). At BATCH_SIZE=50 that is ~800 sequential upserts, which
+// alone overran the 300s budget for Streamflow. 500 rows × 10 columns stays far
+// under Postgres' 65,535 bind-parameter limit.
+const SOLANA_BULK_WRITE_BATCH = 500;
+
 async function runSolanaBulkFetch(
   job: SeedJob,
   fetchAll: () => Promise<VestingStream[] | null>,
@@ -1638,7 +1645,7 @@ async function runSolanaBulkFetch(
 
   let streamsWritten   = 0;
   let batchWriteErrors = 0;
-  for (const batch of chunk(streams, BATCH_SIZE)) {
+  for (const batch of chunk(streams, SOLANA_BULK_WRITE_BATCH)) {
     const written = await writeToCache(batch);
     if (written === 0) {
       batchWriteErrors++;
@@ -1695,6 +1702,22 @@ async function runJob(job: SeedJob, limit: number): Promise<SeedRunResult> {
   // so the per-wallet path would be pure waste.
   if (job.adapterId === "smithii") {
     return runSolanaBulkFetch(job, fetchAllSmithiiSchedules);
+  }
+  // ── Streamflow special path ────────────────────────────────────────────────
+  // Discovery used to list ~50k recipients and hydrate the first 200 via
+  // per-wallet client.get() — the same 200 every day, since the scan's order
+  // is stable — so most streams never reached the cache (4 of 45 open CARDS
+  // streams on 2026-10-29). One closed=false program scan returns every open
+  // stream already decoded. discoverStreamflowRecipients stays for the
+  // seed-diagnostic route only.
+  if (job.adapterId === "streamflow") {
+    return runSolanaBulkFetch(job, async () => {
+      const known = await readCachedSolanaMintMeta().catch((err) => {
+        console.error(`[seeder:streamflow] cached mint metadata read failed, resolving all from chain:`, err);
+        return undefined;
+      });
+      return fetchAllStreamflowStreams(known);
+    });
   }
 
   let recipients: string[];

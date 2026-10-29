@@ -51,8 +51,8 @@ import {
   nextUnlockTimeForSteps,
 } from "../types";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getMint } from "@solana/spl-token";
 import { mapBounded, getSolanaRpcUrls } from "../rpc";
+import { resolveSolanaMintMeta } from "../solana-token-meta";
 
 // Helius free-tier CU/s ceiling — see streamflow.ts for the same constants.
 const SOLANA_CONCURRENCY = 4;
@@ -269,29 +269,17 @@ async function fetchForChain(
 
   if (escrows.length === 0) return [];
 
-  // Batch-fetch SPL metadata for every unique mint, same pattern as Streamflow.
+  // SPL metadata from chain (mint account + Metaplex), same as Streamflow.
+  // The Jupiter "verified" list this used left every row with a truncated-mint
+  // symbol and an assumed 9 decimals.
   const uniqueMints = [...new Set(escrows.map((e) => e.tokenMint))];
-  const jupiterList = await getJupiterTokenList();
-
+  const meta = await resolveSolanaMintMeta(connection, uniqueMints);
   const decimalsByMint = new Map<string, number>();
   const symbolsByMint  = new Map<string, string>();
-
-  // Bounded-concurrency mint metadata fan-out — same Helius rate budget.
-  await mapBounded(
-    uniqueMints,
-    SOLANA_CONCURRENCY,
-    async (mint) => {
-      const fromJupiter = jupiterList.get(mint);
-      try {
-        const mintInfo = await getMint(connection, new PublicKey(mint));
-        decimalsByMint.set(mint, mintInfo.decimals);
-      } catch {
-        decimalsByMint.set(mint, fromJupiter?.decimals ?? 9);
-      }
-      symbolsByMint.set(mint, fromJupiter?.symbol ?? `${mint.slice(0, 4)}…`);
-    },
-    SOLANA_BATCH_DELAY_MS,
-  );
+  for (const [mint, m] of meta) {
+    if (m.decimals != null) decimalsByMint.set(mint, m.decimals);
+    if (m.symbol   != null) symbolsByMint.set(mint, m.symbol);
+  }
 
   const nowSec = Math.floor(Date.now() / 1000);
 
@@ -515,15 +503,13 @@ export async function fetchAllJupiterLockEscrows(): Promise<VestingStream[] | nu
 
   if (escrows.length === 0) return [];
 
-  // SPL metadata via Jupiter token-list (cached for 30 min).
-  const jupiterList = await getJupiterTokenList();
+  // SPL metadata from chain — see the per-wallet path above.
+  const meta = await resolveSolanaMintMeta(connection, [...new Set(escrows.map((e) => e.tokenMint))]);
   const decimalsByMint = new Map<string, number>();
   const symbolsByMint  = new Map<string, string>();
-  for (const e of escrows) {
-    if (decimalsByMint.has(e.tokenMint)) continue;
-    const fromJupiter = jupiterList.get(e.tokenMint);
-    decimalsByMint.set(e.tokenMint, fromJupiter?.decimals ?? 9);
-    symbolsByMint.set(e.tokenMint, fromJupiter?.symbol ?? `${e.tokenMint.slice(0, 4)}…`);
+  for (const [mint, m] of meta) {
+    if (m.decimals != null) decimalsByMint.set(mint, m.decimals);
+    if (m.symbol   != null) symbolsByMint.set(mint, m.symbol);
   }
 
   // Map decoded escrows → VestingStream. Same logic as fetchForChain's
