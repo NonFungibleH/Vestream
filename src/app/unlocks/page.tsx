@@ -44,7 +44,7 @@ export const maxDuration = 60;
 
 
 export const metadata: Metadata = {
-  title:       "Token Unlock Calendar – All Upcoming Vesting Events | Vestream",
+  title:       "Token Unlock Calendar: Upcoming Vesting Events | Vestream",
   description: `Live calendar of upcoming token unlocks across ${PUBLIC_PROTOCOL_COUNT} vesting protocols and ${PUBLIC_CHAIN_COUNT} chains. View by today, this week, this month, or rolling 30/60/90-day windows.`,
   alternates:  { canonical: "https://www.vestream.io/unlocks" },
   openGraph: {

@@ -23,7 +23,7 @@ const CANONICAL_URL = "https://www.vestream.io/unlocks/biggest-this-week";
 
 export const metadata: Metadata = {
   title:       "Biggest Token Unlocks This Week – Live Calendar | Vestream",
-  description: "Every token unlock landing this week, ranked by USD value. Live, on-chain, across Sablier, Hedgey, UNCX, and more.",
+  description: "Every token unlock landing this week, ranked by USD value. Live on-chain data across Sablier, Hedgey, Streamflow, Team Finance, PinkSale and more.",
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {
     title:       "Biggest token unlocks this week | Vestream",

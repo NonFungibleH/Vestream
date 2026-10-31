@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthorized } from "@/lib/admin-auth";
+import { getProtocol } from "@/lib/protocol-constants";
+import { isPlausibleTokenPath } from "@/lib/token-page-chains";
 
 // NOTE (2026-06-12): this file used to inject a stale-while-revalidate
 // Cache-Control header on the marketing-data routes (/protocols, /unlocks,
@@ -36,6 +38,28 @@ const CHAIN_SLUG_TO_ID: Record<string, number> = {
   base:     8453,
 };
 
+// Matches /token/{chainId}/{address} and /protocols/{slug}[/...].
+const TOKEN_PAGE_RE = /^\/token\/([^/]+)\/([^/]+)\/?$/;
+const PROTOCOL_PAGE_RE = /^\/protocols\/([^/]+)(\/.*)?$/;
+
+// A real 404 for URLs the page would reject anyway. These routes have a
+// loading.tsx, so the skeleton streams before the page body runs, and a
+// notFound() from the body can then only send a 200 with noindex — Search
+// Console logs those as soft 404s. Rewriting to a path no route matches renders
+// the root not-found page with a genuine 404 status.
+function notFoundResponse(req: NextRequest) {
+  return NextResponse.rewrite(new URL("/__not-found", req.url), { status: 404 });
+}
+
+// Mirrors the page guards: /protocols/[protocol] 404s disabled and unlisted
+// protocols; its /unlocks pages 404 only disabled ones.
+function isKnownProtocolPath(slug: string, rest: string | undefined): boolean {
+  const meta = getProtocol(slug);
+  if (!meta || meta.disabled) return false;
+  if (!rest || rest === "/") return !meta.unlisted;
+  return true;
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -45,6 +69,16 @@ export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = pathname.toLowerCase();
     return NextResponse.redirect(url, 308);
+  }
+
+  // ── Real 404s for impossible token and protocol URLs ──────────────────────
+  const tokenMatch = TOKEN_PAGE_RE.exec(pathname);
+  if (tokenMatch && !isPlausibleTokenPath(tokenMatch[1], tokenMatch[2])) {
+    return notFoundResponse(req);
+  }
+  const protocolMatch = PROTOCOL_PAGE_RE.exec(pathname);
+  if (protocolMatch && !isKnownProtocolPath(protocolMatch[1], protocolMatch[2])) {
+    return notFoundResponse(req);
   }
 
   // ── Legacy ?chain= → path-segment redirect for protocol unlock pages ──────

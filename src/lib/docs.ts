@@ -313,7 +313,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: "protocols",
     title: "Integrated protocols",
     description:
-      "Every vesting protocol Vestream indexes: Sablier, Hedgey, Superfluid, LlamaPay, UNCX, Unvest, Team Finance, PinkSale, HoodLock, Magna, Streamflow, and Jupiter Lock.",
+      "Every vesting protocol Vestream indexes, from Sablier, Hedgey and Superfluid to UNCX, Team Finance, PinkSale, HoodLock, Magna, Streamflow and Jupiter Lock.",
     category: "Reference",
     icon: "plug",
     summary: "Every vesting protocol Vestream indexes.",

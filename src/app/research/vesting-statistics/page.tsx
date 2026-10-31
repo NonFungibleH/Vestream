@@ -16,7 +16,7 @@ import { formatUsdCompact as fmtUsd } from "@/lib/vesting/quick-prices";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Token Vesting Statistics, TVL, Streams & Locked Supply | Vestream",
+  title: "Token Vesting Statistics: TVL and Locked Supply | Vestream",
   description:
     "Live token vesting statistics from Vestream's on-chain index: total value locked in vesting, stream and token counts, and TVL by chain and protocol.",
   alternates: { canonical: "https://www.vestream.io/research/vesting-statistics" },

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { after } from "next/server";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
@@ -17,6 +18,13 @@ import {
   toDateSafe,
   type ProtocolStats,
 } from "@/lib/vesting/protocol-stats";
+
+// The homepage owns its canonical. It used to live in the root layout, which
+// every page without its own `alternates` inherited — all 44 articles told
+// Google they were duplicates of the homepage (found 2026-10-31).
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.vestream.io" },
+};
 
 // Homepage → article links. The homepage is the strongest page on the site and
 // previously linked only two articles; these point its authority at the core

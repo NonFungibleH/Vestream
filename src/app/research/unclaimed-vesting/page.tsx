@@ -23,9 +23,9 @@ import {
 } from "@/lib/unclaimed-research";
 
 const URL_ = "https://www.vestream.io/research/unclaimed-vesting";
-const TITLE = "Unclaimed Token Vesting: What Happens After Tokens Unlock (Oct 2026)";
+const TITLE = "Unclaimed Token Vesting: A Study of 1.28M Schedules";
 const DESC =
-  "An on-chain study of about 1.28 million finished vesting schedules across 8 protocols, on EVM chains and Solana: how often unlocked tokens are never claimed, how much they are worth, and how the numbers were measured.";
+  "An on-chain study of 1.28 million finished vesting schedules across 8 protocols: how often unlocked tokens are never claimed, and what they are worth.";
 
 export const metadata: Metadata = {
   title: TITLE,

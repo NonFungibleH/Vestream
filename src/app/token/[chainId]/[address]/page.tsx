@@ -32,6 +32,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isValidWalletAddress, normaliseAddress } from "@/lib/address-validation";
+import { TOKEN_PAGE_CHAIN_NAMES } from "@/lib/token-page-chains";
 import { blockExplorerAddressUrl } from "@/lib/chain-links";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -132,17 +133,8 @@ export async function generateStaticParams() {
 
 // ─── Small presentational helpers ───────────────────────────────────────────
 
-const CHAIN_NAMES: Record<number, string> = {
-  1: "Ethereum",
-  56: "BNB Chain",
-  137: "Polygon",
-  8453: "Base",
-  42161: "Arbitrum",
-  10: "Optimism",
-  43114: "Avalanche",
-  4663: "Robinhood Chain",
-  101: "Solana",
-};
+// Shared with src/middleware.ts, which 404s token URLs on any other chain.
+const CHAIN_NAMES = TOKEN_PAGE_CHAIN_NAMES;
 
 // Per-chain block-explorer hosts for the public token page. Same convention
 // as the dashboard's BLOCK_EXPLORERS – duplicated here because the public
@@ -273,12 +265,19 @@ export async function generateMetadata(
   // Titles follow how people search ("<token> unlock schedule"), and the
   // description carries the full contract address: address searches are where
   // these pages already rank (positions 5–10), and Google bolds an exact match.
+  // Brand suffix only while the title still fits Google's ~60-character cut.
+  const base    = `${ticker} vesting & unlock schedule on ${chain}`;
   const title   = knownEmpty
     ? `No vesting found for ${symbol} on ${chain} | Vestream`
-    : `${ticker} vesting & unlock schedule on ${chain} | Vestream`;
+    : `${base} | Vestream`.length <= 60 ? `${base} | Vestream` : base;
   const protocols = overview?.protocolMix.length ?? 0;
+  // The full address eats ~44 characters, so the tail shortens until the
+  // snippet fits Google's ~158-character cut.
+  const lead    = `${ticker} (${addr}) on ${chain}: ${locked} ${ticker} still vesting across ${protocols} protocol${protocols === 1 ? "" : "s"}.`;
   const desc    = overview
-    ? `${ticker} (${addr}) on ${chain}: ${locked} ${ticker} still vesting across ${protocols} protocol${protocols === 1 ? "" : "s"}. Unlock calendar, next unlock date and top recipients.`
+    ? [" Unlock calendar, next unlock date and top recipients.", " Unlock calendar and top recipients.", ""]
+        .map((tail) => lead + tail)
+        .find((d) => d.length <= 158) ?? lead
     : knownEmpty
       ? `Vestream tracks no vesting for ${symbol} on ${chain}. Scan your wallet to find every vesting you are owed across ${PUBLIC_PROTOCOL_COUNT} protocols.`
       : `Vesting activity for ${symbol} on ${chain}. Track unlocks before they hit.`;

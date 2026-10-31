@@ -38,8 +38,8 @@ import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-consta
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Crypto Vesting Tax Reports: Income at Claim, Koinly & TurboTax Exports | Vestream",
-  description: "Work out tax on vested tokens. Vestream indexes every claim you made, prices it at fair market value on the day, and exports Koinly, CoinTracker and TurboTax files your accountant can use.",
+  title:       "Crypto Vesting Tax Reports and Exports | Vestream",
+  description: "Work out tax on vested tokens. Every claim you made, priced at fair market value on the day, exported for Koinly, CoinTracker and TurboTax.",
   alternates:  { canonical: "https://www.vestream.io/tax" },
   openGraph: {
     title:       "Tax on vested tokens, worked out from your claims | Vestream",

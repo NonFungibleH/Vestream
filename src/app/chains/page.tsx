@@ -28,7 +28,7 @@ export const maxDuration = 60;
 export const metadata: Metadata = {
   title: "Token Unlocks by Chain | Vestream",
   description:
-    "Vesting TVL leaderboard by blockchain: Ethereum, BNB Chain, Polygon, Base, Arbitrum, Optimism, Avalanche, Solana, and Robinhood Chain. See TVL, protocols, and upcoming unlocks per chain.",
+    "Token vesting by blockchain: value locked, vesting protocols and upcoming unlocks for Ethereum, BNB Chain, Base, Arbitrum, Solana and every chain we index.",
   alternates: { canonical: "https://www.vestream.io/chains" },
   openGraph: {
     title: "Token Unlocks by Chain",

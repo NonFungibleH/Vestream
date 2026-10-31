@@ -315,7 +315,7 @@ export async function generateMetadata(
   // protocol name + "token unlocks / vesting schedule". TVL + alerts moved to
   // the description/on-page rather than the title.
   const title = `${meta.name} Token Unlocks & Vesting Schedule | Vestream`;
-  const description = `Track ${meta.name} token vesting and unlocks live, the upcoming unlock schedule, locked value (TVL), top recipients, and free alerts before every cliff. No sign-up.`;
+  const description = `Track ${meta.name} token vesting and unlocks live: the unlock schedule, locked value, top recipients and free alerts before every cliff. No sign-up.`;
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;
 

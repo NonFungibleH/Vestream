@@ -64,12 +64,15 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   try {
     const result = await getCachedProtocolUnlocks(meta.slug, meta.adapterIds, null);
     if (result.stats.unlockCount > 0) {
-      countLine = `${result.stats.unlockCount} upcoming unlocks across ${result.stats.tokenCount} tokens. `;
+      countLine = `${result.stats.unlockCount} upcoming unlocks across ${result.stats.tokenCount} tokens`;
     }
   } catch { /* fall through */ }
 
-  const title = `${meta.name} Unlock Calendar – Upcoming Token Unlocks | Vestream`;
-  const desc  = `${countLine}Live ${meta.name} unlock calendar – every upcoming token unlock with per-token amounts, dates, and recipient counts.`.slice(0, 160);
+  const title = `${meta.name} Unlock Calendar: Upcoming Unlocks | Vestream`;
+  // Two shapes so both land in Google's 120–158 character snippet window.
+  const desc  = countLine
+    ? `Live ${meta.name} unlock calendar: ${countLine}, with amounts, dates and recipient counts. Free alerts before each one.`
+    : `Live ${meta.name} unlock calendar: every upcoming token unlock with amounts, dates and recipient counts. Free alerts before each one, no sign-up.`;
 
   return {
     title,

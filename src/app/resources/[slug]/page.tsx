@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
+import { articleSeoTitle, articleSeoDescription } from "@/lib/article-seo";
 import { linkifyContent } from "@/lib/article-linkify";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 
@@ -46,10 +47,13 @@ export async function generateMetadata(
   const article = getArticle(slug);
   if (!article) return {};
   return {
-    title: `${article.title} | Vestream`,
-    description: article.excerpt,
+    // Search title/description are shorter than the headline/excerpt —
+    // see lib/article-seo.ts. OG and Twitter keep the full headline.
+    title: articleSeoTitle(article.slug, article.title),
+    description: articleSeoDescription(article.slug, article.excerpt),
     keywords: article.tags.join(", "),
     authors: [{ name: "Vestream", url: "https://www.vestream.io" }],
+    alternates: { canonical: `https://www.vestream.io/resources/${article.slug}` },
     openGraph: {
       title: article.title,
       description: article.excerpt,

@@ -64,7 +64,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   manifest: "/manifest.json",
   applicationName: "Vestream",
-  alternates: { canonical: APP_URL },
+  // No site-wide canonical: a layout-level one is inherited by every page that
+  // doesn't set its own, which pointed all 44 articles (and every 404) at the
+  // homepage. Each page declares its own; the homepage sets "/" in page.tsx.
   appleWebApp: {
     capable:     true,
     title:       "Vestream",

@@ -22,7 +22,7 @@ const MIN_WALLETS = 25;
 const WINDOW_DAYS = 30;
 
 export const metadata: Metadata = {
-  title:       "Token Mass Distributions – Airdrops & Launchpad Unlocks | Vestream",
+  title:       "Mass Distributions: Airdrop & Launchpad Unlocks | Vestream",
   description: `On-chain unlock events with ${MIN_WALLETS}+ recipients in the next ${WINDOW_DAYS} days. Catches airdrops, launchpad rounds, and seed allocations.`,
   alternates:  { canonical: CANONICAL_URL },
   openGraph:   {

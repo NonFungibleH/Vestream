@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ chain: st
     if (!up) return { title: "Chain not found | Vestream" };
     return {
       title: `${up.name} Token Unlocks & Vesting | Vestream`,
-      description: `Token vesting on ${up.name}: which vesting protocols are deployed there, why unlock schedules matter on ${up.name}, and when Vestream will index it. ${up.tagline}`,
+      description: `Token vesting on ${up.name}: which vesting protocols are deployed there, why unlock schedules matter, and when Vestream will start indexing it.`,
       alternates: { canonical: url },
       openGraph: { title: `${up.name} Token Unlocks & Vesting`, description: up.tagline, url, siteName: "Vestream", type: "website" },
     };
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ chain: st
   const name = chainBrand(chainId).name;
   return {
     title: `${name} Token Unlocks & Vesting Tracker | Vestream`,
-    description: `Live token vesting on ${name}: total value locked, the protocols integrated on ${name}, and the biggest upcoming token unlocks, priced in USD. Free, updated continuously.`,
+    description: `Live token vesting on ${name}: value locked, the vesting protocols on ${name} and the biggest upcoming unlocks, priced in USD. Free.`,
     alternates: { canonical: url },
     openGraph: {
       title: `${name} Token Unlocks & Vesting`,

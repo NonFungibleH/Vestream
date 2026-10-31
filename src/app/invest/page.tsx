@@ -26,7 +26,7 @@ import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-consta
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title:       "Vestream Invest – Track every token vesting unlock you're owed",
+  title:       "Vestream Invest: Track Every Vesting Unlock You're Owed",
   description: `Never miss a token unlock from projects you've backed. Vestream tracks vestings across ${PUBLIC_PROTOCOL_COUNT} protocols and ${PUBLIC_CHAIN_COUNT} chains, with push alerts the second a cliff hits.`,
   alternates:  { canonical: "https://www.vestream.io/invest" },
   openGraph: {
