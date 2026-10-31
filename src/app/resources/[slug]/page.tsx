@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
-import { articleSeoTitle, articleSeoDescription } from "@/lib/article-seo";
+import { articleSeoTitle, articleSeoDescription, articleQuickAnswer } from "@/lib/article-seo";
 import { linkifyContent } from "@/lib/article-linkify";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 
@@ -321,6 +321,7 @@ export default async function ArticlePage(
   const { slug } = await params;
   const article = getArticle(slug);
   if (!article) notFound();
+  const quickAnswer = articleQuickAnswer(article.slug);
 
   const allArticles = getAllArticles();
   // Related = most topically relevant, not "first 4 in the array". Score by
@@ -359,6 +360,7 @@ export default async function ArticlePage(
         "@type": "Article",
         headline: article.title,
         description: article.excerpt,
+        ...(quickAnswer ? { abstract: quickAnswer } : {}),
         articleBody,
         articleSection: article.category,
         inLanguage: "en-US",
@@ -527,6 +529,12 @@ export default async function ArticlePage(
 
           {/* Article content */}
           <main className="flex-1 max-w-3xl min-w-0">
+
+            {/* Answer-first block for articles that don't open with one
+                (lib/article-seo.ts). Search engines and AI answers quote it. */}
+            {quickAnswer && (
+              <RenderBlock block={{ type: "callout", emoji: "💡", title: "The short version", body: quickAnswer }} />
+            )}
 
             {/* Table of contents */}
             <TableOfContents blocks={article.content} />

@@ -14,6 +14,10 @@
 export interface ArticleSeo {
   title?:       string;
   description?: string;
+  /** Answer-first summary shown at the top of the article ("The short
+   *  version") and emitted as the Article schema's `abstract`. Only for
+   *  articles that don't already open with one; facts come from the article. */
+  quickAnswer?: string;
 }
 
 export const ARTICLE_SEO: Record<string, ArticleSeo> = {
@@ -43,6 +47,7 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "Team Finance vesting is on-chain but has no dashboard for recipients. How it works and three ways to track your unlocks, including a free wallet scan.",
   },
   "arbitrum-arb-token-unlock-schedule": {
+    quickAnswer: "ARB has a maximum supply of 10 billion tokens, and roughly 61% had unlocked by mid-2026. Most of the rest, mainly team and investor allocations, releases through cliff unlocks that run into 2027, so ARB unlocks land as large single-day supply events. Check a live tracker for the next date and amount, as schedules can change.",
     title:       "ARB Token Unlock Schedule and Vesting (2026)",
     description: "Arbitrum's ARB still has a large share of supply unlocking through 2027 on cliff-based vesting. How the ARB unlock schedule works and where to see it live.",
   },
@@ -51,6 +56,7 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "PinkLock is PinkSale's tool for locking liquidity and vesting team tokens. How it works, which chains it covers, and how to verify any PinkSale lock.",
   },
   "kaito-token-unlock-schedule": {
+    quickAnswer: "KAITO has a total supply of 1 billion tokens, and only about a quarter was circulating by mid-2026. The rest, led by Ecosystem & Network Growth (32.2%) and Core Contributors (25%), unlocks over the following years, with major allocations released in cliff-style steps into 2029. Each cliff adds supply on a single day, so check a live tracker for the next one.",
     description: "KAITO has a large share of supply still locked and vesting into 2029. How its unlock schedule is structured, what to watch at the next unlock, and live data.",
   },
   "what-is-jupiter-lock-solana-token-vesting": {
@@ -78,18 +84,22 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "How Hedgey's on-chain vesting plans and token grants work, what its pricing model really costs, and the main alternatives if you're choosing a vesting tool.",
   },
   "best-crypto-token-unlock-trackers": {
+    quickAnswer: "A good token unlock tracker reads vesting straight from on-chain contracts across many protocols, shows what your own wallet is owed, and alerts you before each unlock. Market-wide calendars cover the big tokens' schedules, while wallet-level trackers show the vestings you personally hold. Free access matters: you shouldn't pay to see when your own tokens unlock.",
     title:       "Best Token Unlock Trackers and Calendars (2026)",
     description: "Token unlocks move markets only if you see them coming. What makes a good unlock tracker, and how the main token unlock calendars compare in 2026.",
   },
   "what-is-token-vesting": {
+    quickAnswer: "Token vesting locks a token allocation and releases it to the recipient gradually or in tranches on a set schedule. Vested tokens are unlocked and free to move; unvested tokens stay in a smart contract until the schedule releases them. It exists so founders, investors and team members can't sell their whole allocation the moment a token lists.",
     title:       "What Is Token Vesting? A Complete Guide",
     description: "Token vesting controls when recipients can access their tokens. How it works, why it matters, and what investors, founders and team members need to know.",
   },
   "token-vesting-schedules-explained": {
+    quickAnswer: "A token vesting schedule sets when locked tokens reach the recipient: a start date, an end date, a release pattern and often a cliff and a TGE unlock. Cliff schedules release in one jump, linear ones continuously, and stepped ones in regular tranches. Too short a schedule, a large TGE unlock or no cliff are the main red flags.",
     title:       "Token Vesting Schedules: Cliff, Linear, Stepped",
     description: "The three main token vesting schedules, cliff, linear and stepped, with real examples, comparison tables and the red flags every investor should check.",
   },
   "how-to-track-token-vesting": {
+    quickAnswer: "You can track token vesting by reading the vesting contract on a block explorer, by checking each protocol's own app, or with a multi-protocol tracker that reads every contract for your wallet at once. The first two work for a single position. Across several protocols and chains, a tracker with unlock alerts is the practical option.",
     title:       "How to Track Token Vesting: A Complete Guide",
     description: "Every way to track token vesting, from block explorer lookups to multi-protocol dashboards, and how to make sure you never miss an unlock again.",
   },
@@ -106,6 +116,7 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "It's not just how many tokens unlock but how often. How unlock frequency changes sell pressure, recipient decisions and price stability in vesting designs.",
   },
   "why-token-prices-fall-before-unlocks": {
+    quickAnswer: "A Keyrock study of more than 16,000 token unlocks found about 90% were followed by price declines, with prices starting to fall around 30 days before the unlock. Because unlock dates are public, holders sell early and institutions hedge ahead of time. Team unlocks were the most disruptive; ecosystem unlocks were the gentlest.",
     title:       "Why Token Prices Fall Before an Unlock, Not On It",
     description: "Research on 16,000+ token unlocks found prices usually fell, starting weeks before the release. Why that happens, which unlocks hit hardest, how to read one.",
   },
@@ -134,6 +145,7 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "Every vested token has an unlock schedule. How to understand when your tokens release, and how to track those dates across your whole crypto portfolio.",
   },
   "what-is-a-token": {
+    quickAnswer: "A token is a unit of value or utility recorded in a smart contract on a blockchain: an entry in a ledger saying which address owns how much of it. Holding a token means controlling a wallet address that the contract credits with it. A coin, like ETH, is native to its own blockchain; a token is issued by a contract running on one.",
     title:       "What Is a Token? A Plain-English Crypto Guide",
     description: "A token is a unit of value inside a smart contract. What tokens are, how they differ from coins, the main types, and how to track the tokens you own.",
   },
@@ -142,19 +154,23 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     description: "Three protocols lead token vesting on EVM chains. How Sablier, Hedgey and UNCX differ in mechanics, cost and features, for projects and for recipients.",
   },
   "sablier-token-streaming-vesting-explained": {
+    quickAnswer: "Sablier holds tokens in a smart contract and releases them to the recipient per second, so the claimable balance grows continuously instead of in monthly steps. The release rate is the locked total divided by the duration, and the recipient can withdraw whatever has accrued at any time. Vestream tracks Sablier streams across chains alongside your other vestings.",
     title:       "Sablier Vesting and Streaming: How It Works",
   },
   "hedgey-nft-vesting-plans-explained": {
     description: "Hedgey turns each vesting plan into a transferable NFT. How that design changes the on-chain mechanics, the recipient experience and the tax picture.",
   },
   "uncx-token-lockers-and-vesting": {
+    quickAnswer: "UNCX runs two separate products: token lockers, best known for locking a project's liquidity, and vesting contracts for team and investor tokens. Its vesting comes in two versions, TokenVesting v3 and the newer VestingManager, and both support cliff-plus-linear schedules. “Locked on UNCX” can mean either product, so check which contract holds the tokens.",
     title:       "UNCX Token Locker and Vesting: How It Works",
     description: "UNCX is best known for LP locks but also runs two vesting products, TokenVesting v3 and VestingManager. How to tell them apart and read a UNCX vest.",
   },
   "streamflow-solana-vesting": {
+    quickAnswer: "Streamflow is the most-used token vesting protocol on Solana. It supports cliff-plus-linear, tranche and continuous payroll-style streams for SPL tokens, with each stream held in its own on-chain account rather than one shared contract. Vestream reads Streamflow streams alongside EVM vestings in one dashboard.",
     title:       "Streamflow Token Vesting on Solana Explained",
   },
   "cliff-vesting-vs-linear-vesting": {
+    quickAnswer: "A cliff releases nothing for a fixed period, then unlocks a chunk at once; linear vesting releases tokens continuously or in small regular tranches with no jumps. Most real schedules combine them, typically a 1-year cliff followed by 3 years of linear release. The cliff rewards staying; the linear part smooths sell pressure.",
     title:       "Cliff vs Linear Vesting: Which Should You Use?",
   },
   "how-to-read-a-vesting-schedule": {
@@ -188,6 +204,11 @@ const MAX_TITLE = 60;
 export function articleSeoTitle(slug: string, headline: string): string {
   const base = ARTICLE_SEO[slug]?.title ?? headline;
   return (base + BRAND_SUFFIX).length <= MAX_TITLE ? base + BRAND_SUFFIX : base;
+}
+
+/** Answer-first summary for the top of the article, if one is set. */
+export function articleQuickAnswer(slug: string): string | undefined {
+  return ARTICLE_SEO[slug]?.quickAnswer;
 }
 
 /** Search description: the SEO description, else the article excerpt. */
