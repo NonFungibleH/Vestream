@@ -23,7 +23,7 @@ export function GET() {
     r.valueUsd?.low ?? "", r.valueUsd?.high ?? "", r.valueUsd?.note ?? "", r.measured,
   ].map(esc).join(","));
   const body = [
-    "# Unclaimed token vesting, October 2026. Pearce, H. / Vestream. CC BY 4.0. https://www.vestream.io/research/unclaimed-vesting",
+    "# Unclaimed token vesting, October 2026. Non Fungible Howard / Vestream. CC BY 4.0. https://www.vestream.io/research/unclaimed-vesting",
     header.join(","), ...lines,
   ].join("\n") + "\n";
   return new Response(body, {

@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ARTICLE_AUTHOR, ARTICLE_AUTHOR_JSONLD } from "@/lib/author";
 import {
   UNCLAIMED_SUMMARY,
   UNCLAIMED_FULL_CENSUS_TOTAL,
@@ -55,7 +56,7 @@ export default function UnclaimedVestingResearch() {
     license: "https://creativecommons.org/licenses/by/4.0/",
     isAccessibleForFree: true,
     creator: [
-      { "@type": "Person", name: "Howard Pearce" },
+      ARTICLE_AUTHOR_JSONLD,
       { "@type": "Organization", name: "Vestream", url: "https://www.vestream.io" },
     ],
     datePublished: "2026-10-16",
@@ -232,7 +233,7 @@ export default function UnclaimedVestingResearch() {
           you can reuse it with attribution. Suggested citation:
         </p>
         <p className="text-sm rounded-xl p-4 mb-10" style={{ background: "white", border: "1px solid rgba(0,0,0,0.07)", color: "#1A1D20" }}>
-          Pearce, H. (2026). <em>Unclaimed token vesting: what happens after tokens unlock</em>. Vestream. {URL_}
+          {ARTICLE_AUTHOR.name} (2026). <em>Unclaimed token vesting: what happens after tokens unlock</em>. Vestream. {URL_}
         </p>
 
         <p className="text-sm" style={{ color: "#8B8E92" }}>
