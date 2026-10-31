@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArticle, getAllArticles, type Block } from "@/lib/articles";
 import { articleSeoTitle, articleSeoDescription, articleQuickAnswer } from "@/lib/article-seo";
+import { ARTICLE_AUTHOR, ARTICLE_AUTHOR_JSONLD } from "@/lib/author";
 import { linkifyContent } from "@/lib/article-linkify";
 import { ScanWalletCTA } from "@/components/ScanWalletCTA";
 
@@ -52,7 +53,7 @@ export async function generateMetadata(
     title: articleSeoTitle(article.slug, article.title),
     description: articleSeoDescription(article.slug, article.excerpt),
     keywords: article.tags.join(", "),
-    authors: [{ name: "Vestream", url: "https://www.vestream.io" }],
+    authors: [{ name: ARTICLE_AUTHOR.name, url: ARTICLE_AUTHOR.url }],
     alternates: { canonical: `https://www.vestream.io/resources/${article.slug}` },
     openGraph: {
       title: article.title,
@@ -61,7 +62,7 @@ export async function generateMetadata(
       type: "article",
       publishedTime: article.publishedAt,
       modifiedTime:  article.updatedAt,
-      authors: ["https://www.vestream.io"],
+      authors: [ARTICLE_AUTHOR.url],
       tags: article.tags,
     },
     twitter: {
@@ -368,11 +369,7 @@ export default async function ArticlePage(
         image: [`https://www.vestream.io/opengraph-image`],
         datePublished: article.publishedAt,
         dateModified: article.updatedAt,
-        author: {
-          "@type": "Organization",
-          name: "Vestream",
-          url: "https://www.vestream.io",
-        },
+        author: ARTICLE_AUTHOR_JSONLD,
         publisher: {
           "@type": "Organization",
           name: "Vestream",
@@ -514,8 +511,11 @@ export default async function ArticlePage(
               <span>{article.readingTime}</span>
               <span>·</span>
               <span className="flex items-center gap-1.5">
-                <img src="/logo-icon.svg" alt="Vestream" className="w-4 h-4" />
-                Vestream
+                <img src="/logo-icon.svg" alt="" className="w-4 h-4" />
+                By{" "}
+                <a href={ARTICLE_AUTHOR.url} rel="author noopener" target="_blank" className="underline" style={{ color: "#8B8E92" }}>
+                  {ARTICLE_AUTHOR.name}
+                </a>
               </span>
             </div>
           </div>
