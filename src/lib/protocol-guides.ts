@@ -21,20 +21,20 @@ import { getArticle } from "./articles";
 interface GuideSlugs { explainer?: string; howTo?: string; claim?: string }
 
 export const PROTOCOL_GUIDE_SLUGS: Record<string, GuideSlugs> = {
-  "sablier":      { explainer: "sablier-token-streaming-vesting-explained", howTo: "how-to-track-sablier-unlocks" },
+  "sablier":      { explainer: "sablier-token-streaming-vesting-explained", howTo: "how-to-track-sablier-unlocks", claim: "how-to-withdraw-sablier-vested-tokens" },
   "sablier-flow": { explainer: "sablier-token-streaming-vesting-explained" },
   "hedgey":       { explainer: "hedgey-nft-vesting-plans-explained",        howTo: "how-to-track-hedgey-unlocks", claim: "how-to-claim-hedgey-vesting-tokens" },
   "team-finance": { explainer: "how-to-track-team-finance-vesting" },
   "uncx":         { explainer: "uncx-token-lockers-and-vesting" },
   "unvest":       { explainer: "what-is-unvest-token-vesting", claim: "how-to-claim-unvest-vested-tokens" },
-  "superfluid":   { explainer: "superfluid-cliff-and-streaming-vesting" },
+  "superfluid":   { explainer: "superfluid-cliff-and-streaming-vesting", claim: "how-to-receive-superfluid-vested-tokens" },
   "pinksale":     { explainer: "what-is-pinksale-pinklock-token-locker", claim: "how-to-unlock-pinksale-pinklock-tokens" },
-  "streamflow":   { explainer: "streamflow-solana-vesting" },
-  "llamapay":     { explainer: "crypto-payroll-and-contributor-income-guide" },
+  "streamflow":   { explainer: "streamflow-solana-vesting", claim: "how-to-claim-streamflow-vested-tokens" },
+  "llamapay":     { explainer: "crypto-payroll-and-contributor-income-guide", claim: "how-to-withdraw-llamapay-stream" },
   "jupiter-lock": { explainer: "what-is-jupiter-lock-solana-token-vesting", claim: "how-to-claim-jupiter-lock-tokens" },
-  "smithii":      { explainer: "what-is-smithii-solana-token-vesting" },
+  "smithii":      { explainer: "what-is-smithii-solana-token-vesting", claim: "how-to-claim-smithii-vested-tokens" },
   "hoodlock":     { explainer: "what-is-hoodlock-robinhood-chain-token-locker", claim: "how-to-withdraw-hoodlock-tokens" },
-  "magna":        { explainer: "what-is-magna-token-vesting" },
+  "magna":        { explainer: "what-is-magna-token-vesting", claim: "how-to-claim-magna-tokens" },
 };
 
 export interface ProtocolGuide { slug: string; title: string; href: string }

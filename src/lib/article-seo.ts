@@ -199,6 +199,30 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     title:       "Sablier Maintenance Mode: What It Means for You",
     description: "Sablier Labs entered maintenance mode on 13 July 2026. Existing streams keep working on-chain. What changes, what doesn't, and how to keep tracking them.",
   },
+  "how-to-withdraw-sablier-vested-tokens": {
+    title:       "How to Withdraw Vested Tokens from Sablier",
+    description: "Sablier streams don't pay out on their own. How to withdraw vested tokens from a Sablier stream on EVM chains or Solana, from a Safe, or from the contract.",
+  },
+  "how-to-claim-streamflow-vested-tokens": {
+    title:       "How to Claim Vested Tokens on Streamflow",
+    description: "Streamflow vesting on Solana needs a manual claim unless the sender turned on auto-claim. How to claim from the Streamflow app, step by step.",
+  },
+  "how-to-claim-magna-tokens": {
+    title:       "How to Claim Your Tokens on Magna",
+    description: "How to claim a Magna token allocation: log in, claim all or part of what has vested, sign from any wallet or a multisig, and fix a missing Claim button.",
+  },
+  "how-to-receive-superfluid-vested-tokens": {
+    title:       "Superfluid Vesting: How You Receive Your Tokens",
+    description: "Superfluid vesting streams tokens to your wallet every second, with no claim step. How a schedule pays out, why you hold Super Tokens and how to unwrap them.",
+  },
+  "how-to-withdraw-llamapay-stream": {
+    title:       "How to Withdraw From a LlamaPay Stream",
+    description: "LlamaPay streams accrue every second and the payee withdraws when they like. How to withdraw, trigger a withdrawal from another wallet, or automate it.",
+  },
+  "how-to-claim-smithii-vested-tokens": {
+    title:       "How to Claim Vested Tokens on Smithii",
+    description: "Smithii vesting on Solana is claimed from a page the project shares. How to claim each release, why you can't claim early, and how to recover a lost link.",
+  },
 };
 
 const BRAND_SUFFIX = " | Vestream";
