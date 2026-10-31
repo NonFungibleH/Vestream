@@ -73,8 +73,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${SITE}/`,              changeFrequency: "weekly",  priority: 1.0 },
     { url: `${SITE}/invest`,        changeFrequency: "weekly",  priority: 0.95 },
-    // /payroll is the coming-soon waitlist page — kept indexable so the
-    // "crypto payroll tracker" search intent finds the roadmap surface,
+    // /payroll is the live recipient-side payroll tracker (the employer offer
+    // is /corporate/token-payroll); it targets "crypto payroll tracker",
     // but priority dropped to 0.5 so it doesn't out-rank /invest or /
     // for queries Vestream actually wants to convert today.
     { url: `${SITE}/payroll`,                 changeFrequency: "monthly", priority: 0.5 },

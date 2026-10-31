@@ -494,9 +494,20 @@ export default async function ArticlePage(
 
             {/* Meta row */}
             <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: "#B8BABD" }}>
-              <span>
-                {new Date(article.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-              </span>
+              {/* Visible freshness: the updated date matches dateModified in
+                  the Article schema, so readers and crawlers see the same date. */}
+              {article.updatedAt && article.updatedAt !== article.publishedAt ? (
+                <span>
+                  Updated{" "}
+                  <time dateTime={article.updatedAt}>
+                    {new Date(article.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}
+                  </time>
+                </span>
+              ) : (
+                <time dateTime={article.publishedAt}>
+                  {new Date(article.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}
+                </time>
+              )}
               <span>·</span>
               <span>{article.readingTime}</span>
               <span>·</span>

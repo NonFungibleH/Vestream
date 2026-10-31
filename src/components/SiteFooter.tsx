@@ -61,7 +61,7 @@ const LINK_GROUPS = [
       { label: "Vesting stats",        href: "/research/vesting-statistics" },
       { label: "Demo",                 href: "/demo"      },
       { label: "Pricing",              href: "/pricing"   },
-      { label: "Payroll",                href: "/payroll"  },
+      { label: "Payroll tracker",        href: "/payroll"  },
       { label: "Tax reports",            href: "/tax"      },
       { label: "Docs",                 href: "/docs"      },
       { label: "Guides",               href: "/resources" },
@@ -80,7 +80,7 @@ const LINK_GROUPS = [
   {
     heading: "Corporate",
     links: [
-      { label: "Token Payroll", href: "/corporate/token-payroll" },
+      { label: "Token payroll for teams", href: "/corporate/token-payroll" },
     ],
   },
   {

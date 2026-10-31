@@ -5,6 +5,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { monthLabel } from "@/lib/vesting/monthly-report";
 
@@ -42,6 +43,7 @@ export default function ReportHubPage() {
   const months = reportMonths();
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+      <WebPageJsonLd path="/unlocks/report" name="Monthly Token Unlock Reports" description={metadata.description as string} type="CollectionPage" />
       <SiteNav theme="light" />
       <section className="px-4 md:px-8 pt-20 md:pt-24 pb-8 max-w-4xl mx-auto w-full">
         <nav aria-label="Breadcrumb" className="mb-4">

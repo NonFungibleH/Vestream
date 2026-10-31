@@ -314,8 +314,29 @@ export async function generateMetadata(
   // Kept ≤60 chars (Bing "title too long" flag) while still leading with the
   // protocol name + "token unlocks / vesting schedule". TVL + alerts moved to
   // the description/on-page rather than the title.
-  const title = `${meta.name} Token Unlocks & Vesting Schedule | Vestream`;
-  const description = `Track ${meta.name} token vesting and unlocks live: the unlock schedule, locked value, top recipients and free alerts before every cliff. No sign-up.`;
+  //
+  // Data-led (2026-10-31): a title that only repeats the protocol's name loses
+  // its brand searches to the protocol's own site ("uncx": 208 impressions, 0
+  // clicks). Leading with a count only Vestream shows gives the searcher a
+  // reason to click. Same cached load as the page body, so no extra queries;
+  // falls back to last-good, then to the plain title.
+  let active = 0;
+  try {
+    active = (await loadProtocolData(meta.adapterIds)).stats?.activeStreams ?? 0;
+  } catch {
+    active = (await getLastGoodProtocolData<ProtocolPageData>(meta.slug))?.stats?.activeStreams ?? 0;
+  }
+  const isStream = meta.adapterIds.some((id) => PROTOCOL_DEFAULT_CATEGORY[id] === "stream");
+  const count = active.toLocaleString("en-US");
+  const base = active > 0
+    ? isStream
+      ? `${meta.name}: ${count} Live Payment Streams Tracked`
+      : `${meta.name} Unlocks: ${count} Active Vesting Schedules`
+    : `${meta.name} Token Unlocks & Vesting Schedule`;
+  const title = `${base} | Vestream`.length <= 60 ? `${base} | Vestream` : base;
+  const description = active > 0
+    ? `Track ${count} active ${meta.name} ${isStream ? "payment streams" : "vesting schedules"} live: unlock calendar, locked value, top recipients and free alerts. No sign-up.`
+    : `Track ${meta.name} token vesting and unlocks live: the unlock schedule, locked value, top recipients and free alerts before every cliff. No sign-up.`;
   const keywords = meta.searchKeywords;
   const url = `https://www.vestream.io/protocols/${meta.slug}`;
 

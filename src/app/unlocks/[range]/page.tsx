@@ -200,8 +200,13 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   const title  = labelHasDate
     ? `Token unlocks ${labelLower} | Vestream`
     : `Token unlocks ${labelLower} – ${dateStr} | Vestream`;
-  // Padded toward Google's 120–158 snippet window; the base copy runs ~105.
-  const desc   = `${countLine}${dynDesc} Live on-chain data from ${PUBLIC_PROTOCOL_COUNT} vesting protocols, with amounts, dates and free alerts.`;
+  // Aim for Google's 120–158 snippet window: the base copy runs ~105, the live
+  // count adds ~35, so take the longest tail that still fits.
+  const desc   = [
+    ` Live on-chain data from ${PUBLIC_PROTOCOL_COUNT} vesting protocols, with amounts, dates and free alerts.`,
+    ` Live on-chain data from ${PUBLIC_PROTOCOL_COUNT} vesting protocols.`,
+    "",
+  ].map((tail) => `${countLine}${dynDesc}${tail}`).find((d) => d.length <= 158) ?? `${countLine}${dynDesc}`;
   const url    = `https://www.vestream.io/unlocks/${range}`;
 
   return {

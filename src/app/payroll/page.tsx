@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 
@@ -109,6 +110,7 @@ const FEATURES = [
 export default function PayrollPage() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
+      <WebPageJsonLd path="/payroll" name="Crypto Payroll Tracker" description={metadata.description as string} about="Crypto payroll" />
       <SiteNav theme="light" />
 
       <main className="pt-24 md:pt-28 pb-16 md:pb-24">
@@ -282,6 +284,12 @@ export default function PayrollPage() {
             Tracking <strong style={{ color: "#0f172a" }}>vesting</strong> instead of payroll?{" "}
             <Link href="/invest" className="underline" style={{ color: "#2563eb" }}>
               Vestream Invest →
+            </Link>
+          </p>
+          <p className="text-sm mb-6" style={{ color: "#64748b" }}>
+            Paying a team in tokens?{" "}
+            <Link href="/corporate/token-payroll" className="underline" style={{ color: "#2563eb" }}>
+              Token payroll for teams →
             </Link>
           </p>
         </section>

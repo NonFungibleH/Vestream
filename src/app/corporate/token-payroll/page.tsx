@@ -29,15 +29,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "Live salary feed for crypto payroll | Vestream",
+  // Employer-intent title so it doesn't compete with /payroll (the recipient's
+  // "crypto payroll tracker") for the same query.
+  title: "Token Payroll for Teams: Live Salary Feed | Vestream",
   description:
     "Token payroll your team can actually see. Give employees, contractors, and KOLs a live view of their vesting salary, with alerts before every unlock.",
   alternates: { canonical: "https://www.vestream.io/corporate/token-payroll" },
   openGraph: {
-    title: "Live salary feed for crypto payroll | Vestream",
+    title: "Token Payroll for Teams: Live Salary Feed | Vestream",
     description:
       "Branded mobile app for your team to watch their crypto salary vest in real time. 24/7, anywhere, any currency.",
     url: "https://www.vestream.io/corporate/token-payroll",
@@ -114,6 +117,7 @@ function IconCheck({ size = 16, color }: { size?: number; color: string }) {
 export default function TokenPayrollPage() {
   return (
     <main className="min-h-screen flex flex-col" style={{ background: THEME.pageBg, color: THEME.navyDeep }}>
+      <WebPageJsonLd path="/corporate/token-payroll" name="Token Payroll for Teams" description={metadata.description as string} about="Token payroll for employers" />
       <SiteNav theme="light" />
 
       {/* ── Hero – "live salary feed" is the wow factor ───────────────────── */}
@@ -739,6 +743,12 @@ export default function TokenPayrollPage() {
             <p className="text-xs mt-5" style={{ color: THEME.slateFaint }}>
               Typical response: within 2 business days. We&rsquo;re not gated
               on enterprise contracts – small teams welcome.
+            </p>
+            <p className="text-sm mt-6" style={{ color: THEME.slateBody }}>
+              Getting paid in tokens yourself?{" "}
+              <Link href="/payroll" className="underline font-semibold" style={{ color: THEME.accentIndigo }}>
+                Track your salary streams →
+              </Link>
             </p>
           </div>
         </div>

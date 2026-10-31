@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
@@ -46,6 +47,7 @@ const STEPS = [
 export default function GetTheAppPage() {
   return (
     <div style={{ background: "#F5F5F3", minHeight: "100vh" }}>
+      <WebPageJsonLd path="/early-access" name="Get the Vestream App" description={metadata.description as string} />
       <SiteNav theme="light" />
 
       {/* Hero */}

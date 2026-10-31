@@ -20,6 +20,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { InteractiveDemo } from "@/components/InteractiveDemo";
 import { VestingDemo } from "@/components/VestingDemo";
@@ -52,6 +53,7 @@ const SABLIER_SEPOLIA      = "https://app.sablier.com/";
 export default function DemoPage() {
   return (
     <main className="min-h-screen flex flex-col" style={{ background: "#F5F5F3", color: "#1A1D20" }}>
+      <WebPageJsonLd path="/demo" name="Vestream Demo" description={metadata.description as string} />
       <SiteNav theme="light" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}

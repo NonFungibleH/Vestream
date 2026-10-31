@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { AppStoreBadges } from "@/components/AppStoreBadges";
 import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
@@ -51,6 +52,7 @@ const PROTOCOLS = [
 export default function InvestLanding() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
+      <WebPageJsonLd path="/invest" name="Vestream Invest" description={metadata.description as string} about="Token vesting tracking for investors" />
       <SiteNav theme="light" />
 
       <main className="pt-24 md:pt-28 pb-16 md:pb-24">

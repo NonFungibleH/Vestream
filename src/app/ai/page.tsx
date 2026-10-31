@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CopyableCode } from "@/components/CopyableCode";
 import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
@@ -133,6 +134,7 @@ function ToolCard({
 export default function AiPage() {
   return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#0d0f14", color: "white" }}>
+      <WebPageJsonLd path="/ai" name="Vestream for AI Agents" description={metadata.description as string} about="Token vesting data for AI agents" />
       <SiteNav theme="dark" />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}

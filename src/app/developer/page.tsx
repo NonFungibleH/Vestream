@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ApiAccessForm } from "@/components/ApiAccessForm";
 import { SiteNav } from "@/components/SiteNav";
+import { WebPageJsonLd } from "@/components/WebPageJsonLd";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PUBLIC_PROTOCOL_COUNT, PUBLIC_CHAIN_COUNT } from "@/lib/protocol-constants";
 
@@ -41,6 +42,7 @@ export default function DeveloperPage() {
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: "#0d1b35", color: "white" }}>
 
       {/* ── Nav ── */}
+      <WebPageJsonLd path="/developer" name="Vestream Developer API" description={metadata.description as string} about="Token vesting data API" />
       <SiteNav theme="navy" />
 
       {/* ── Hero ── */}
