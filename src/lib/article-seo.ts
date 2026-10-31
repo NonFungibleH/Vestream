@@ -195,6 +195,10 @@ export const ARTICLE_SEO: Record<string, ArticleSeo> = {
     title:       "How to Track Hedgey Vesting Plan Unlocks",
     description: "Hedgey vesting plans are NFTs: easy to hold, easy to lose track of. How to find your Hedgey plans, read their unlock dates and get alerted before each one.",
   },
+  "sablier-maintenance-mode-what-it-means": {
+    title:       "Sablier Maintenance Mode: What It Means for You",
+    description: "Sablier Labs entered maintenance mode on 13 July 2026. Existing streams keep working on-chain. What changes, what doesn't, and how to keep tracking them.",
+  },
 };
 
 const BRAND_SUFFIX = " | Vestream";

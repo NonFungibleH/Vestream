@@ -27,6 +27,59 @@ export interface Article {
 
 const articles: Article[] = [
 
+  // ── Sablier maintenance mode (2026-10-31). Recipients will search "sablier
+  //    maintenance mode / shutting down" for years. Facts only from Sablier's
+  //    own posts of 13 Jul 2026 and 2 Jun 2026; neutral, no "Sablier is dying". ──
+  {
+    slug:        "sablier-maintenance-mode-what-it-means",
+    title:       "Sablier Maintenance Mode: What It Means for Your Streams",
+    excerpt:     "Sablier Labs entered maintenance mode on 13 July 2026, but existing streams, vesting plans and airdrops keep working on-chain. What changes, what doesn't, and how to keep tracking your Sablier streams.",
+    publishedAt: "2026-10-31",
+    updatedAt:   "2026-10-31",
+    readingTime: "4 min read",
+    category:    "Protocols",
+    tags:        ["sablier", "sablier maintenance mode", "token vesting", "token streaming", "how to claim"],
+    content: [
+      { type: "p", html: "<strong>Your Sablier streams are still there and still claimable.</strong> Sablier Labs entered maintenance mode on 13 July 2026, but the Sablier contracts are on-chain and permissionless: they don't depend on the company staying in business, and Sablier Labs never held custody of your tokens. In Sablier's own words, \"your existing streams, vesting plans, and airdrops are not changing.\"" },
+
+      { type: "h2", text: "What Sablier announced" },
+      { type: "p", html: "On 13 July 2026 Sablier Labs said it had stopped active product development and would keep serving existing users through June 2028. You can read the full announcement on <a href=\"https://blog.sablier.com/sablier-labs-is-entering-maintenance-mode\" target=\"_blank\" rel=\"noopener\">Sablier's blog</a>." },
+
+      { type: "h2", text: "What changes" },
+      { type: "ul", items: [
+        "The official Sablier app no longer accepts new vesting streams or airdrops that end after June 2028.",
+        "New open-ended payment streams can't be created in the app.",
+        "Sablier won't build new products or deploy to new chains.",
+        "The app and its backend are maintained for existing users through June 2028. Sablier expects to hand the interface to the community, most likely as an open-source project.",
+      ] },
+
+      { type: "h2", text: "What doesn't change" },
+      { type: "ul", items: [
+        "Recipients can keep claiming and withdrawing through the official Sablier app.",
+        "The contracts stay deployed for as long as their networks run. They don't need an operator.",
+        "Sablier says there is no need to exit a position early because of maintenance mode.",
+        "Sablier's main EVM contracts moved from the BUSL licence to the GPL on 13 July 2026, so anyone can now fork and deploy them.",
+      ] },
+
+      { type: "h2", text: "If your stream is on Solana" },
+      { type: "p", html: "Sablier scaled back on Solana earlier, in a <a href=\"https://blog.sablier.com/solana-shutdown\" target=\"_blank\" rel=\"noopener\">post on 2 June 2026</a>. solana.sablier.com is now a claiming-only app: recipients can connect a wallet and withdraw vested tokens, but the app can't create or cancel streams. Senders who want to cancel a Solana stream now have to interact with the Sablier programs directly." },
+
+      { type: "h2", text: "What happens after June 2028" },
+      { type: "p", html: "Sablier describes June 2028 as the end of its funded maintenance commitment, not the day Sablier disappears, and says it will publish a stewardship and hosting plan well before then. Whatever happens to the app, the contracts keep holding and releasing tokens on schedule. The tokens stay claimable through any interface that can call them." },
+
+      { type: "h2", text: "How to keep track of your Sablier streams" },
+      { type: "p", html: "Vestream reads Sablier streams straight from the contracts on its EVM chains, independently of Sablier's app. Paste a wallet into the <a href=\"/find-vestings\">free scanner</a> to see every Sablier stream it is owed, when each one unlocks and what is claimable now, alongside any vestings on other platforms. Live figures for the whole protocol are on the <a href=\"/protocols/sablier\">Sablier page</a>." },
+      { type: "p", html: "<strong>Setting up new vesting?</strong> Sablier's app no longer takes schedules that end after June 2028. If you are choosing a platform for a new distribution, the <a href=\"/token-vesting-platforms\">token vesting platform comparison</a> puts every option side by side on live on-chain data." },
+
+      { type: "faq", items: [
+        { q: "Are my Sablier tokens safe?", a: "Sablier says its contracts are on-chain and permissionless, don't depend on Sablier Labs staying in business, and that the company has no custody of user tokens. Existing streams, vesting plans and airdrops are not changing." },
+        { q: "Can I still claim from Sablier?", a: "Yes. Recipients can keep claiming and withdrawing through the official Sablier app. On Solana, solana.sablier.com remains available as a claiming-only app." },
+        { q: "Can I still create a Sablier stream?", a: "In the official app, only vesting streams and airdrops that end by June 2028. Open-ended payment streams can't be created, and Sablier won't deploy to new chains." },
+        { q: "What happens to Sablier after June 2028?", a: "June 2028 ends Sablier Labs' funded maintenance commitment. The contracts keep running, and Sablier expects to hand the interface to the community, most likely as open source, with a plan published before then." },
+      ] },
+    ],
+  },
+
   // ── Answer-first explainer (2026-10-17). Search Console's generative-AI
   //    report showed answer-shaped pages being cited; this one answers the
   //    question the unclaimed-vesting study raises, with the study's figures. ──
@@ -3787,11 +3840,12 @@ const articles: Article[] = [
     title:       "Sablier Token Vesting & Streaming: How It Works and How to Track It (2026)",
     excerpt:     "Sablier pioneered real-time, per-second token streaming on Ethereum. Here is how it works, where it runs, and how to track Sablier streams on Vestream.",
     publishedAt: "2026-04-27",
-    updatedAt:   "2026-10-09",
+    updatedAt:   "2026-10-31",
     readingTime: "9 min read",
     category:    "Guides",
     tags:        ["sablier", "token streaming", "vesting", "ethereum", "defi"],
     content: [
+      { type: "p", html: "<strong>Update, October 2026:</strong> Sablier Labs entered maintenance mode on 13 July 2026. Existing streams keep working and stay claimable; see <a href=\"/resources/sablier-maintenance-mode-what-it-means\">what Sablier maintenance mode means for your streams</a>." },
       {
         type: "p",
         html: "Sablier is the protocol that introduced the idea of <strong>real-time token streaming</strong> to Ethereum. Instead of releasing locked tokens in monthly tranches, Sablier releases them <em>per second</em> – turning a vesting schedule into a continuous flow of value from the contract to the recipient's claimable balance.",
