@@ -8,6 +8,9 @@
 // in plain words rather than its marketing tagline. Status notes appear only
 // where the platform has said so itself, linked to its own statement.
 //
+// Every figure is Vestream's coverage (the chains and contracts we index), not
+// a platform's full deployment; the copy says so wherever a number appears.
+//
 // Data: the shared /protocols loader (lib/vesting/protocols-page-data.ts),
 // with the same last-good fallback, so build prerenders bake real numbers.
 
@@ -29,16 +32,12 @@ export const maxDuration = 60;
 const URL_ = "https://www.vestream.io/token-vesting-platforms";
 const TITLE = "Token Vesting Platforms Compared (2026)";
 const DESC =
-  "Every major token vesting platform compared on live on-chain data: active schedules, value locked and chains for Sablier, Hedgey, Streamflow, UNCX and more.";
+  "Token vesting platforms compared on live on-chain data from the chains Vestream tracks: value locked and active schedules for Sablier, Hedgey and more.";
 
 export const metadata: Metadata = {
   title: `${TITLE} | Vestream`,
   description: DESC,
   alternates: { canonical: URL_ },
-  // Held out of the index until reviewed (Howard approves Phase 2 pages
-  // before they go live in search). Remove this line and add the URL to
-  // app/sitemap.ts to publish.
-  robots: { index: false, follow: true },
   openGraph: { title: TITLE, description: DESC, url: URL_, siteName: "Vestream", type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESC },
 };
@@ -133,28 +132,27 @@ export default async function TokenVestingPlatformsPage() {
   const byTvl    = rows.filter((r) => r.tvlUsd > 0).slice(0, 3);
   const byActive = [...rows].sort((a, b) => b.active - a.active)[0];
   const solana   = rows.filter((r) => r.chains.includes("Solana")).map((r) => r.meta.name);
-  const evmOnly  = rows.filter((r) => !r.chains.includes("Solana")).length;
 
   const quickAnswer =
-    `Vestream reads ${rows.length} token vesting platforms on-chain. ` +
+    `Vestream indexes ${rows.length} token vesting platforms on-chain. ` +
     (byTvl.length === 3
-      ? `By value locked, the largest are ${byTvl[0].meta.name} (${fmtUsd(byTvl[0].tvlUsd)}), ${byTvl[1].meta.name} (${fmtUsd(byTvl[1].tvlUsd)}) and ${byTvl[2].meta.name} (${fmtUsd(byTvl[2].tvlUsd)}). `
+      ? `On the chains we track, the largest by value locked are ${byTvl[0].meta.name} (${fmtUsd(byTvl[0].tvlUsd)}), ${byTvl[1].meta.name} (${fmtUsd(byTvl[1].tvlUsd)}) and ${byTvl[2].meta.name} (${fmtUsd(byTvl[2].tvlUsd)}). `
       : "") +
     (byActive && byActive.active > 0
-      ? `${byActive.meta.name} has the most active schedules (${fmtCount(byActive.active)}). `
+      ? `${byActive.meta.name} has the most active schedules in our index (${fmtCount(byActive.active)}). `
       : "") +
-    `There is no single best platform: the right one depends on your chain and on whether you need cliffs, streams or transferable plans.`;
+    `Most platforms run on more chains than we track, so their full totals are higher. There is no single best platform: the right one depends on your chain and on whether you need cliffs, streams or transferable plans.`;
 
   const faq = [
     {
       q: "What are the top token vesting platforms?",
       a: byTvl.length === 3
-        ? `By value locked in the contracts Vestream indexes, the largest are ${byTvl[0].meta.name}, ${byTvl[1].meta.name} and ${byTvl[2].meta.name}. By active schedules, ${byActive.meta.name} leads. The full table above ranks all ${rows.length}.`
+        ? `By value locked on the chains Vestream tracks, the largest are ${byTvl[0].meta.name}, ${byTvl[1].meta.name} and ${byTvl[2].meta.name}. By active schedules, ${byActive.meta.name} leads. The full table above ranks all ${rows.length}.`
         : `The table above compares all ${rows.length} platforms Vestream indexes on value locked, active schedules and chains.`,
     },
     {
       q: "Which token vesting platforms work on Solana?",
-      a: `Of the platforms Vestream indexes, ${listWords(solana)} support Solana. The other ${evmOnly} run on EVM chains such as Ethereum, Base, BNB Chain and Arbitrum.`,
+      a: `On Solana, Vestream currently tracks ${listWords(solana)}. Other platforms support Solana too (Team Finance, for example, lists it on its own site), so check each platform's site for its full chain list.`,
     },
     {
       q: "What is the difference between a token locker and a vesting platform?",
@@ -162,7 +160,7 @@ export default async function TokenVestingPlatformsPage() {
     },
     {
       q: "Can I track vestings from different platforms in one place?",
-      a: `Yes. Paste a wallet address into Vestream's free scanner and it reads every platform in this table, on EVM chains and Solana, and lists what the wallet is owed and when each unlock lands.`,
+      a: `Yes. Paste a wallet address into Vestream's free scanner and it reads every platform in this table on the chains we track, and lists what the wallet is owed and when each unlock lands.`,
     },
   ];
 
@@ -181,7 +179,7 @@ export default async function TokenVestingPlatformsPage() {
       },
       {
         "@type": "ItemList",
-        name: "Token vesting platforms by value locked",
+        name: "Token vesting platforms by value locked on the chains Vestream tracks",
         itemListElement: rows.map((r, i) => ({
           "@type": "ListItem",
           position: i + 1,
@@ -217,8 +215,9 @@ export default async function TokenVestingPlatformsPage() {
           Token vesting platforms compared
         </h1>
         <p className="text-lg leading-relaxed mb-6 max-w-3xl" style={{ color: "#5B5E62" }}>
-          Every vesting platform Vestream indexes, measured the same way from on-chain data: how much is locked,
-          how many schedules are still running, and which chains each one covers.
+          Every vesting platform Vestream indexes, measured the same way from on-chain data on the chains we
+          track: how much is locked and how many schedules are still running. Most platforms also run on chains
+          we don&rsquo;t index yet, so their full totals are higher than shown here.
           {asOfLabel && <> Figures as of {asOfLabel}.</>}
         </p>
 
@@ -236,7 +235,7 @@ export default async function TokenVestingPlatformsPage() {
                 <th className={th}>How it vests</th>
                 <th className={`${th} text-right`}>Value locked</th>
                 <th className={`${th} text-right`}>Active schedules</th>
-                <th className={th}>Chains</th>
+                <th className={th}>Chains we track</th>
               </tr>
             </thead>
             <tbody>
@@ -259,13 +258,15 @@ export default async function TokenVestingPlatformsPage() {
         </div>
         <p className="text-xs mt-3 max-w-3xl" style={{ color: "#8B8E92" }}>
           Value locked is tokens still held in each platform&rsquo;s contracts, priced at market; tokens with no
-          market price count as zero. Active schedules have not finished vesting. Sorted by value locked. How we
-          measure: <Link href="/methodology" className="underline">methodology</Link>.
+          market price count as zero. Active schedules have not finished vesting. Figures cover only the chains
+          and contracts Vestream indexes, not each platform&rsquo;s full deployment, except values marked
+          &ldquo;via DefiLlama&rdquo;, which are DefiLlama&rsquo;s own figure for that platform. Sorted by value
+          locked. How we measure: <Link href="/methodology" className="underline">methodology</Link>.
         </p>
 
         <h2 className="text-2xl font-bold mt-14 mb-4">How to choose</h2>
         <ul className="space-y-3 max-w-3xl text-base leading-relaxed" style={{ color: "#334155" }}>
-          <li><strong>Start with your chain.</strong> Most platforms are EVM-only; on Solana the choice is {listWords(solana)}.</li>
+          <li><strong>Start with your chain.</strong> Check each platform&rsquo;s own site for the chains it supports; the table above lists only the chains we track.</li>
           <li><strong>Match the release shape.</strong> Cliffs and tranches suit team and investor allocations; per-second streams suit payroll and grants.</li>
           <li><strong>Decide who can move a position.</strong> Some platforms make each plan an NFT the recipient can transfer; others tie it to one wallet.</li>
           <li><strong>Check the claim experience.</strong> Recipients almost always have to claim; nothing arrives on its own. A clear claim page saves your recipients support tickets.</li>
@@ -278,7 +279,7 @@ export default async function TokenVestingPlatformsPage() {
             <div key={r.meta.slug} className="rounded-2xl p-4" style={{ background: "white", border: "1px solid #e2e8f0" }}>
               <div className="font-semibold mb-1">{r.meta.name}</div>
               <p className="text-sm mb-2" style={{ color: "#5B5E62" }}>
-                {HOW_IT_VESTS[r.meta.slug] ?? r.meta.tagline}. {fmtCount(r.total)} schedules indexed, {fmtCount(r.active)} still active.
+                {HOW_IT_VESTS[r.meta.slug] ?? r.meta.tagline}. {fmtCount(r.total)} schedules in our index, {fmtCount(r.active)} still active.
               </p>
               {STATUS[r.meta.slug] && (
                 <p className="text-sm mb-2" style={{ color: "#92400e" }}>
@@ -307,7 +308,7 @@ export default async function TokenVestingPlatformsPage() {
         <div className="mt-14">
           <ScanWalletCTA
             heading="Owed tokens on any of these platforms?"
-            sub="Paste a wallet to see every vesting across all of them, on EVM chains and Solana."
+            sub="Paste a wallet to see every vesting we track across all of them, on EVM chains and Solana."
             surface="platforms_compare"
           />
         </div>

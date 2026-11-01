@@ -84,6 +84,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/tax`,                     changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE}/corporate/token-payroll`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/protocols`,     lastModified: today,       changeFrequency: "daily",   priority: 0.95 },
+    // Neutral platform comparison on live index data (SEO Phase 2).
+    { url: `${SITE}/token-vesting-platforms`, lastModified: today, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE}/unlocks`,       lastModified: today,       changeFrequency: "daily",   priority: 0.9 },
     { url: `${SITE}/chains`,        lastModified: today,       changeFrequency: "daily",   priority: 0.8 },
     // Ranking pages — high-intent commercial queries ("biggest token unlocks
